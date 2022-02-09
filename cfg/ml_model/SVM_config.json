@@ -1,0 +1,13 @@
+{
+    "max_value_c"  : 1000,
+    "min_value_c"  : 1,
+    "max_value_tol"  : 0.8,
+    "min_value_tol"  : 0.00001,
+    "max_value_max_iter":200000,
+    "min_value_max_iter":100,
+    "max_value_gamma":500,
+    "min_value_gamma":0.0001,
+    "max_value_kernal":4,
+    "min_value_kernal":1,
+    "int_parameter":[0,2]
+}

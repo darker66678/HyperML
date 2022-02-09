@@ -1,0 +1,5 @@
+{
+    "data_path": "./dataset/Cervical_cancer_ori.csv",
+    "target" : "ca_cervix",
+    "data_name": "Cervical"
+}
