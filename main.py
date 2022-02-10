@@ -14,15 +14,13 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model",help="KNN,MLP,SVM",default="KNN")
+    parser.add_argument("--model", help="KNN,MLP,SVM", default="SVM")
     parser.add_argument(
         "--data", help="cancer,machine,custom", default="custom")
-    parser.add_argument("--algo", help="PSO,VOA", default="PSO")
+    parser.add_argument("--algo", help="PSO,VOA", default="VOA")
     parser.add_argument(
-        "--matrix", help="accuracy, f1, recall, precision", default="accuracy")
+        "--matrix", help="cls: accuracy, f1, recall, precision, specificity; reg: r2", default="r2")
     args = parser.parse_args()
-
-
 
     if(args.data == "custom"):
         with open('./dataset/custom.json') as f:
@@ -68,7 +66,7 @@ if __name__ == '__main__':
 
         elif (i == 0 and args.data == "custom"):
             y = data[custom_data['target']]
-            X = data.drop([custom_data['target']],axis=1)
+            X = data.drop([custom_data['target']], axis=1)
             target = custom_data['target']
             data_path = custom_data['data_path']
             file = custom_data['data_name']
@@ -81,7 +79,8 @@ if __name__ == '__main__':
         logging.basicConfig(
             level=logging.DEBUG, filename=log_path, filemode='w', format=FORMAT)
 
-        print(f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, Matrix: {args.matrix}')
+        print(
+            f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, Matrix: {args.matrix}')
         logging.info(
             f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, Matrix: {args.matrix}')
 
@@ -101,10 +100,7 @@ if __name__ == '__main__':
                 print(f'PSO parameters: {algo_cfg}')
                 logging.info(f'PSO config: {algo_cfg}')
             particle_num = algo_cfg['particle_num']
-            if (args.model == "MLP"):
-                particle_dim = int(len(model_cfg)/2)+2
-            else:
-                particle_dim = int(len(model_cfg)/2)
+            particle_dim = int((len(model_cfg)-2)/2)
             iter_num = algo_cfg['iter_num']
             c1 = algo_cfg['c1']
             c2 = algo_cfg['c2']
@@ -128,11 +124,11 @@ if __name__ == '__main__':
                 print(f'VOA config: {algo_cfg}')
                 logging.info(f'VOA config: {algo_cfg}')
 
-            virus_num = algo_cfg['virus_num']  # 起始病毒數量
-            virus_dim = int((len(model_cfg)-1)/2)  # 超參數調整數量
-            s_proportion = algo_cfg['s_proportion']  # 強壯病毒比例
-            strong_growth_rate = algo_cfg['strong_growth_rate']  # 強壯病毒複製率
-            common_growth_rate = algo_cfg['common_growth_rate']  # 一般病毒複製率
+            virus_num = algo_cfg['virus_num']
+            virus_dim = int((len(model_cfg)-2)/2)
+            s_proportion = algo_cfg['s_proportion']
+            strong_growth_rate = algo_cfg['strong_growth_rate']
+            common_growth_rate = algo_cfg['common_growth_rate']
             total_virus_limit = algo_cfg['total_virus_limit']
             intensity = algo_cfg['intensity']
             starttime = datetime.datetime.now()
@@ -144,7 +140,6 @@ if __name__ == '__main__':
                 (f"best_parameter:{best_parameter},best_fitness:{best_fitness}"))
             logging.info((f"time:{endtime - starttime} "))
 
-            #儲存資料
             parms = pd.DataFrame(parms)
             results = pd.concat(
                 [pd.DataFrame(train, columns=["train"]), pd.DataFrame(test, columns=["test"]), parms], axis=1)
