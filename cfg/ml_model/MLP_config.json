@@ -25,11 +25,49 @@
         "max_value_learning_rate": 3,
         "min_value_learning_rate": 1
     },
+    "param": [
+        "hidden_layer_1",
+        "hidden_layer_2",
+        "alpha",
+        "learning_rate_init",
+        "max_iter",
+        "tol",
+        "beta_1",
+        "beta_2",
+        "n_iter_no_change",
+        "activation",
+        "solver",
+        "learning_rate"
+    ],
     "int_param": [
         0,
         1,
         4,
         8
     ],
-    "type": "regression"
+    "class_param": {
+        "class_number": [
+            9,
+            10,
+            11
+        ],
+        "class_name": [
+            [
+                "identity",
+                "logistic",
+                "tanh",
+                "relu"
+            ],
+            [
+                "lbfgs",
+                "sgd",
+                "adam"
+            ],
+            [
+                "constant",
+                "invscaling",
+                "adaptive"
+            ]
+        ]
+    }
 }

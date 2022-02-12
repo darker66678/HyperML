@@ -2,6 +2,14 @@ from sklearn.metrics import make_scorer
 from sklearn.metrics import roc_curve
 import pandas as pd
 import plotly.express as px
+import json
+import datetime
+import logging
+from PSO import PSO
+from VOA import VOA
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.svm import SVC, SVR
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 
 
 def load_KNN_cfg(model_cfg):
@@ -17,7 +25,8 @@ def load_KNN_cfg(model_cfg):
         "max_value_metric": model_cfg['param_setting']['max_value_metric'],
         "min_value_metric": model_cfg['param_setting']['min_value_metric'],
         "int_parameter": model_cfg['int_param'],
-        "type": model_cfg["type"]
+        "class_parameter": model_cfg['class_param'],
+        "param": model_cfg['param']
     }
     return KNN_cfg
 
@@ -49,7 +58,8 @@ def load_MLP_cfg(model_cfg):
         "max_value_learning_rate": model_cfg['param_setting']['max_value_learning_rate'],
         "min_value_learning_rate": model_cfg['param_setting']['min_value_learning_rate'],
         "int_parameter": model_cfg['int_param'],
-        "type": model_cfg["type"]
+        "class_parameter": model_cfg['class_param'],
+        "param": model_cfg['param']
     }
     return MLP_cfg
 
@@ -67,29 +77,40 @@ def load_SVM_cfg(model_cfg):
         "max_value_kernal": model_cfg['param_setting']['max_value_kernal'],
         "min_value_kernal": model_cfg['param_setting']['min_value_kernal'],
         "int_parameter": model_cfg['int_param'],
-        "type": model_cfg["type"]
+        "class_parameter": model_cfg['class_param'],
+        "param": model_cfg['param']
     }
     return SVM_cfg
 
 
-def load_data(data, cfg=None):
-    if(data == "cancer"):
-        data_ovarian = pd.read_csv(
-            "C:/Users/Yang/Desktop/data/ovarian cancer.csv")
-        data_breast = pd.read_csv(
-            "C:/Users/Yang/Desktop/data/Breast cancer.csv")
-        data_cervical = pd.read_csv(
-            "C:/Users/Yang/Desktop/data/Cervical cancer.csv")
-        dataset = [data_ovarian, data_breast, data_cervical]
+def load_ML_model_cfg(args):
+    if(args.model == "KNN"):
+        with open('./cfg/ml_model/KNN_config.json') as f:
+            model_cfg_json = json.load(f)
+        model_cfg = load_KNN_cfg(model_cfg_json)
 
-    elif(data == "machine"):
-        data_machine = pd.read_csv(
-            "C:/Users/Yang/Desktop/data/cooler-Valve-Pump-Accumulator(random).csv")
-        dataset = [data_machine]
-    elif(data == "custom"):
-        data = pd.read_csv(cfg['data_path'])
-        dataset = [data]
-    return dataset
+    elif(args.model == "MLP"):
+        with open('./cfg/ml_model/MLP_config.json') as f:
+            model_cfg_json = json.load(f)
+        model_cfg = load_MLP_cfg(model_cfg_json)
+
+    elif(args.model == "SVM"):
+        with open('./cfg/ml_model/SVM_config.json') as f:
+            model_cfg_json = json.load(f)
+        model_cfg = load_SVM_cfg(model_cfg_json)
+    return model_cfg, model_cfg_json
+
+
+def load_data(data, cfg):
+    data = pd.read_csv(cfg['data_path'])
+    dataset = [data]
+    task_type = cfg['type']
+    y = data[cfg['target']]
+    X = data.drop([cfg['target']], axis=1)
+    target = cfg['target']
+    data_path = cfg['data_path']
+    file = cfg['data_name']
+    return dataset, task_type, y, X, file, target, data_path
 
 
 def plot_boxplot(data, boxpath):
@@ -106,3 +127,122 @@ def specificity_func(y_true, y_pred):
 def customize_speci():
     specificity = make_scorer(specificity_func)
     return specificity
+
+
+def hyper(args, model_cfg, X, y, file, folder, task_type):
+    if(args.algo == "PSO"):
+        with open('./cfg/algo/PSO_config.json') as f:
+            algo_cfg = json.load(f)
+            print(f'PSO parameters: {algo_cfg}')
+            logging.info(f'PSO config: {algo_cfg}')
+        particle_num = algo_cfg['particle_num']
+        particle_dim = int((len(model_cfg)-3)/2)
+        iter_num = algo_cfg['iter_num']
+        c1 = algo_cfg['c1']
+        c2 = algo_cfg['c2']
+        w = algo_cfg['w']
+
+        starttime = datetime.datetime.now()
+        pso = PSO(particle_num, particle_dim, iter_num, c1,
+                  c2, w, model_cfg, X, y, file, args.model, folder, args.matrix, task_type, algo_MLconfig)
+        results = pso.main()
+        endtime = datetime.datetime.now()
+        logging.info(f"time: {endtime - starttime}")
+        logging.info("-----------------------\n\n")
+        print("time: ", (endtime - starttime))
+        print("---------------------------")
+        results.to_csv(
+            f'{folder}/{args.algo}({args.model})_{file}.csv')
+
+    elif(args.algo == "VOA"):
+        with open('./cfg/algo/VOA_config.json') as f:
+            algo_cfg = json.load(f)
+            print(f'VOA config: {algo_cfg}')
+            logging.info(f'VOA config: {algo_cfg}')
+
+        virus_num = algo_cfg['virus_num']
+        virus_dim = int((len(model_cfg)-3)/2)
+        s_proportion = algo_cfg['s_proportion']
+        strong_growth_rate = algo_cfg['strong_growth_rate']
+        common_growth_rate = algo_cfg['common_growth_rate']
+        total_virus_limit = algo_cfg['total_virus_limit']
+        intensity = algo_cfg['intensity']
+        starttime = datetime.datetime.now()
+        voa = VOA(virus_num, virus_dim, strong_growth_rate,
+                  common_growth_rate, s_proportion, total_virus_limit, intensity, model_cfg, X, y, args.model, args.matrix, task_type, folder, file, algo_MLconfig)
+        results = voa.main()
+        endtime = datetime.datetime.now()
+        logging.info((f"time:{endtime - starttime} "))
+        logging.info("-----------------------\n\n")
+        print("time: ", (endtime - starttime))
+        print("---------------------------")
+        results.to_csv(
+            f'{folder}/{args.algo}({args.model})_{file}.csv')
+        print("finished!!!")
+
+    boxpath = f'{folder}/{args.algo}_{args.model}_{file}_box.jpg'
+    plot_boxplot(results, boxpath)
+
+
+def algo_MLconfig(model, task_type, model_cfg):
+    if(model == "KNN"):
+        neighbors = [model_cfg["max_value_neighbors"],
+                     model_cfg["min_value_neighbors"]]
+        leaf_size = [model_cfg["max_value_leaf_size"],
+                     model_cfg["min_value_leaf_size"]]
+        weights = [model_cfg["max_value_weights"],
+                   model_cfg["min_value_weights"]]
+        algorithm = [model_cfg["max_value_algorithm"],
+                     model_cfg["min_value_algorithm"]]
+        metric = [model_cfg["max_value_metric"],
+                  model_cfg["min_value_metric"]]
+        max_min = [neighbors, leaf_size, weights, algorithm, metric]
+        if task_type == "classification":
+            ML_model = KNeighborsClassifier
+        elif task_type == "regression":
+            ML_model = KNeighborsRegressor
+    elif(model == "MLP"):
+        hidden_layer = [
+            model_cfg['max_value_hidden_layer_1'], model_cfg['min_value_hidden_layer_1']]
+        hidden_layer_2 = [
+            model_cfg['max_value_hidden_layer_2'], model_cfg['min_value_hidden_layer_2']]
+        alpha = [model_cfg['max_value_alpha'],
+                 model_cfg['min_value_alpha']]
+        learning_rate_init = [
+            model_cfg['max_value_learning_rate_init'], model_cfg['min_value_learning_rate_init']]
+        max_iter = [model_cfg['max_value_max_iter'],
+                    model_cfg['min_value_max_iter']]
+        tol = [model_cfg['max_value_tol'], model_cfg['min_value_tol']]
+        beta = [model_cfg['max_value_beta_1'], model_cfg['min_value_beta_1']]
+        beta_2 = [model_cfg['max_value_beta_2'], model_cfg['min_value_beta_2']]
+        n_iter_no_change = [
+            model_cfg['max_value_n_iter_no_change'], model_cfg['min_value_n_iter_no_change']]
+        activation = [model_cfg['max_value_activation'],
+                      model_cfg['min_value_activation']]
+        solver = [model_cfg['max_value_solver'],
+                  model_cfg['min_value_solver']]
+        learning_rate = [
+            model_cfg['max_value_learning_rate'], model_cfg['min_value_learning_rate']]
+
+        max_min = [hidden_layer, hidden_layer_2, alpha, learning_rate_init, max_iter,
+                   tol, beta, beta_2, n_iter_no_change, activation, solver, learning_rate]
+        if task_type == "classification":
+            ML_model = MLPClassifier
+        elif task_type == "regression":
+            ML_model = MLPRegressor
+
+    elif(model == "SVM"):
+        c = [model_cfg['max_value_c'], model_cfg['min_value_c']]
+        tol = [model_cfg['max_value_tol'], model_cfg['min_value_tol']]
+        max_iter = [model_cfg['max_value_max_iter'],
+                    model_cfg['min_value_max_iter']]
+        gamma = [model_cfg['max_value_gamma'],
+                 model_cfg['min_value_gamma']]
+        kernal = [model_cfg['max_value_kernal'],
+                  model_cfg['min_value_kernal']]
+        max_min = [c, tol, max_iter, gamma, kernal]
+        if task_type == "classification":
+            ML_model = SVC
+        elif task_type == "regression":
+            ML_model = SVR
+    return max_min, ML_model

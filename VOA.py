@@ -1,4 +1,4 @@
-
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import random
@@ -14,16 +14,18 @@ specificity = make_scorer(recall_score, pos_label=0)
 
 class VOA(object):
     def __init__(self, virus_num, virus_dim, strong_growth_rate, common_growth_rate, s_proportion, total_virus_limit,
-                 intensity, model_cfg, X, y, model, matrix):
+                 intensity, model_cfg, X, y, model, matrix, task_type, folder, file, algo_MLconfig):
 
         self.virus_num = virus_num
         self.virus_dim = virus_dim
         self.s_proportion = s_proportion
-        self.strong_growth_rate = strong_growth_rate  # 通常设为
-        self.common_growth_rate = common_growth_rate  # 通常设为
+        self.strong_growth_rate = strong_growth_rate
+        self.common_growth_rate = common_growth_rate
         self.total_virus_limit = total_virus_limit
         self.intensity = intensity
         self.int_parameter = model_cfg['int_parameter']
+        self.class_parm = model_cfg['class_parameter']
+        self.param_name = model_cfg['param']
         self.count = self.virus_num-1
         self.X = X
         self.y = y
@@ -32,70 +34,14 @@ class VOA(object):
             self.matrix = specificity
         else:
             self.matrix = matrix
+        self.folder = folder
+        self.file = file
         # -------------------------------------------------------------
-        if(model == "KNN"):
-            neighbors = [model_cfg["max_value_neighbors"],
-                         model_cfg["min_value_neighbors"]]
-            leaf_size = [model_cfg["max_value_leaf_size"],
-                         model_cfg["min_value_leaf_size"]]
-            weights = [model_cfg["max_value_weights"],
-                       model_cfg["min_value_weights"]]
-            algorithm = [model_cfg["max_value_algorithm"],
-                         model_cfg["min_value_algorithm"]]
-            metric = [model_cfg["max_value_metric"],
-                      model_cfg["min_value_metric"]]
-            self.max_min = [neighbors, leaf_size, weights, algorithm, metric]
-            if model_cfg["type"] == "classification":
-                self.sklearn = KNeighborsClassifier
-            elif model_cfg["type"] == "regression":
-                self.sklearn = KNeighborsRegressor
+        self.max_min, self.ML_model = algo_MLconfig(
+            model, task_type, model_cfg)
 
-        elif(model == "MLP"):
-            hidden_layer = [
-                model_cfg['max_value_hidden_layer'], model_cfg['min_value_hidden_layer']]
-            hidden_layer_2 = [
-                model_cfg['max_value_hidden_layer'], model_cfg['min_value_hidden_layer']]
-            alpha = [model_cfg['max_value_alpha'],
-                     model_cfg['min_value_alpha']]
-            learning_rate_init = [
-                model_cfg['max_value_learning_rate_init'], model_cfg['min_value_learning_rate_init']]
-            max_iter = [model_cfg['max_value_max_iter'],
-                        model_cfg['min_value_max_iter']]
-            tol = [model_cfg['max_value_tol'], model_cfg['min_value_tol']]
-            beta = [model_cfg['max_value_beta'], model_cfg['min_value_beta']]
-            beta_2 = [model_cfg['max_value_beta'], model_cfg['min_value_beta']]
-            n_iter_no_change = [
-                model_cfg['max_value_n_iter_no_change'], model_cfg['min_value_n_iter_no_change']]
-            activation = [model_cfg['max_value_activation'],
-                          model_cfg['min_value_activation']]
-            solver = [model_cfg['max_value_solver'],
-                      model_cfg['min_value_solver']]
-            learning_rate = [
-                model_cfg['max_value_learning_rate'], model_cfg['min_value_learning_rate']]
+        # initialize
 
-            self.max_min = [hidden_layer, hidden_layer_2, alpha, learning_rate_init, max_iter,
-                            tol, beta, beta_2, n_iter_no_change, activation, solver, learning_rate]
-            if model_cfg["type"] == "classification":
-                self.sklearn = MLPClassifier
-            elif model_cfg["type"] == "regression":
-                self.sklearn = MLPRegressor
-
-        elif(model == "SVM"):
-            c = [model_cfg['max_value_c'], model_cfg['min_value_c']]
-            tol = [model_cfg['max_value_tol'], model_cfg['min_value_tol']]
-            max_iter = [model_cfg['max_value_max_iter'],
-                        model_cfg['min_value_max_iter']]
-            gamma = [model_cfg['max_value_gamma'],
-                     model_cfg['min_value_gamma']]
-            kernal = [model_cfg['max_value_kernal'],
-                      model_cfg['min_value_kernal']]
-            self.max_min = [c, tol, max_iter, gamma, kernal]
-            if model_cfg["type"] == "classification":
-                self.sklearn = SVC
-            elif model_cfg["type"] == "regression":
-                self.sklearn = SVR
-
-# initialize
     def virus_origin(self):
         current_parameter = [
             [0 for _ in range(self.virus_dim+3)]for _ in range(self.virus_num)]
@@ -117,102 +63,58 @@ class VOA(object):
         return current_parameter
 
 # calculate fitness
-    def fitness(self, current_parameter, parms, train, test, record):
+    def fitness(self, current_parameter, params, train, test, record):
         for i in range(len(current_parameter)):
             if current_parameter[i][self.virus_dim] == 1:
                 continue
-            elif len(parms) == self.total_virus_limit:
-                return current_parameter, parms, train, test, record
+            elif len(params) == self.total_virus_limit:
+                return current_parameter, params, train, test, record
             elif current_parameter[i][self.virus_dim] == 0:
+                class_particle = []
+                for index, class_num in enumerate(self.class_parm['class_number']):
+                    count = 1
+                    for class_name in self.class_parm['class_name'][index]:
+                        if(count-1 < current_parameter[i][class_num] <= count):
+                            class_particle.append(class_name)
+                            break
+                        else:
+                            count += 1
                 if(self.model == "KNN"):
-                    if(0 <= current_parameter[i][2] <= 4):
-                        weights = "uniform"
-                    elif(4 < current_parameter[i][2] <= 8):
-                        weights = "distance"
-
-                    if(0 <= current_parameter[i][3] <= 4):
-                        algorithm = "ball_tree"
-                    elif(4 < current_parameter[i][3] <= 8):
-                        algorithm = "kd_tree"
-                    elif(8 < current_parameter[i][3] <= 12):
-                        algorithm = "brute"
-                    elif(12 < current_parameter[i][3] <= 16):
-                        algorithm = "auto"
-
-                    if(0 <= current_parameter[i][4] <= 4):
-                        metric = "euclidean"
-                    elif(4 < current_parameter[i][4] <= 8):
-                        metric = "manhattan"
-                    elif(8 < current_parameter[i][4] <= 12):
-                        metric = "chebyshev"
-
                     with parallel_backend('threading'):
-                        knn = KNeighborsClassifier(
-                            n_neighbors=current_parameter[i][0], weights=weights, algorithm=algorithm, leaf_size=current_parameter[i][1], metric=metric, n_jobs=-1)
+                        knn = self.ML_model(
+                            n_neighbors=current_parameter[i][0], weights=class_particle[0], algorithm=class_particle[1], leaf_size=current_parameter[i][1], metric=class_particle[2], n_jobs=-1)
                         cv_scores = cross_validate(
                             knn, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
                     print(i, cv_scores['test_score'].mean())
                     if(record == True):
-                        parms.append([current_parameter[i][0], current_parameter[i][1], weights,
-                                      algorithm, metric]+current_parameter[i][self.virus_dim+2:])  # record
+                        params.append([current_parameter[i][0], current_parameter[i][1], class_particle[0],
+                                       class_particle[1], class_particle[2]]+current_parameter[i][self.virus_dim+2:])  # record
 
                 elif(self.model == "MLP"):
-                    if(0 <= current_parameter[i][9] <= 4):
-                        activation = "identity"
-                    elif(4 < current_parameter[i][9] <= 8):
-                        activation = "logistic"
-                    elif(8 < current_parameter[i][9] <= 12):
-                        activation = "tanh"
-                    elif(12 < current_parameter[i][9] <= 16):
-                        activation = "relu"
-
-                    if(0 <= current_parameter[i][10] <= 4):
-                        solver = "lbfgs"
-                    elif(4 < current_parameter[i][10] <= 8):
-                        solver = "sgd"
-                    elif(8 < current_parameter[i][10] <= 12):
-                        solver = "adam"
-
-                    if(0 <= current_parameter[i][11] <= 4):
-                        learning_rate = "constant"
-                    elif(4 < current_parameter[i][11] <= 8):
-                        learning_rate = "invscaling"
-                    elif(8 < current_parameter[i][11] <= 12):
-                        learning_rate = "adaptive"
-
                     with parallel_backend('threading'):
-                        mlp = MLPClassifier(hidden_layer_sizes=[current_parameter[i][0], current_parameter[i][1]], activation=activation, solver=solver, alpha=current_parameter[i][2], batch_size='auto',
-                                            learning_rate=learning_rate, learning_rate_init=current_parameter[i][3], max_iter=current_parameter[i][4], shuffle=True, random_state=None, tol=current_parameter[i][5],
+                        mlp = self.ML_model(hidden_layer_sizes=[current_parameter[i][0], current_parameter[i][1]], activation=class_particle[0], solver=class_particle[1], alpha=current_parameter[i][2], batch_size='auto',
+                                            learning_rate=class_particle[2], learning_rate_init=current_parameter[i][3], max_iter=current_parameter[i][4], shuffle=True, random_state=None, tol=current_parameter[i][5],
                                             verbose=False, warm_start=False, nesterovs_momentum=True, early_stopping=False, beta_1=current_parameter[i][6], beta_2=current_parameter[i][7], epsilon=1e-08,
                                             n_iter_no_change=current_parameter[i][8])
                         cv_scores = cross_validate(
                             mlp, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
-                    print(len(parms), cv_scores['test_score'].mean())
+                    print(len(params), cv_scores['test_score'].mean())
                     if(record == True):
-                        parms.append(
+                        params.append(
                             [current_parameter[i][0], current_parameter[i][1],  current_parameter[i][2], current_parameter[i][3], current_parameter[i][4],
-                             current_parameter[i][5], current_parameter[i][6], current_parameter[i][7], current_parameter[i][8], activation, solver, learning_rate] +
+                             current_parameter[i][5], current_parameter[i][6], current_parameter[i][7], current_parameter[i][8], class_particle[0], class_particle[1], class_particle[2]] +
                             current_parameter[i][self.virus_dim+2:])
 
                 elif(self.model == "SVM"):
-                    if(0 <= current_parameter[i][4] <= 4):
-                        kernel = "linear"
-                    elif(4 < current_parameter[i][4] <= 8):
-                        kernel = "poly"
-                    elif(8 < current_parameter[i][4] <= 12):
-                        kernel = "rbf"
-                    elif(12 < current_parameter[i][4] <= 16):
-                        kernel = "sigmoid"
-
                     with parallel_backend('threading'):
-                        svm = SVC(C=current_parameter[i][0], kernel=kernel, degree=3, gamma=current_parameter[i][3], coef0=0.0, shrinking=True,
-                                  probability=False, tol=current_parameter[i][1], cache_size=1000, class_weight=None, max_iter=current_parameter[i][2])
+                        svm = self.ML_model(C=current_parameter[i][0], kernel=class_particle[0], degree=3, gamma=current_parameter[i][3], coef0=0.0, shrinking=True,
+                                            probability=False, tol=current_parameter[i][1], cache_size=1000, class_weight=None, max_iter=current_parameter[i][2])
                         cv_scores = cross_validate(
                             svm, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
-                    print(len(parms), cv_scores['test_score'].mean())
+                    print(len(params), cv_scores['test_score'].mean())
                     if(record == True):
-                        parms.append(
-                            [current_parameter[i][0], current_parameter[i][1], current_parameter[i][2], current_parameter[i][3], kernel] +
+                        params.append(
+                            [current_parameter[i][0], current_parameter[i][1], current_parameter[i][2], current_parameter[i][3], class_particle[0]] +
                             current_parameter[i][self.virus_dim+2:])
 
                 if np.isnan(cv_scores['test_score'].mean()):
@@ -227,7 +129,7 @@ class VOA(object):
 
         if(record == False):
             record = True
-        return current_parameter, parms, train, test, record
+        return current_parameter, params, train, test, record
 
 # divided strong and common virus
     def classification(self, current_parameter):
@@ -257,7 +159,7 @@ class VOA(object):
         return best_fitness, best_parameter, lb_fitness, lb_parameter
 
 # clone new virus
-    def update(self, current_parameter, svn, cvn, parms):
+    def update(self, current_parameter, svn, cvn, params):
         svn_update = []
         cvn_update = []
         # clone strong virus
@@ -272,7 +174,7 @@ class VOA(object):
                     elif j == self.virus_dim:
                         tmp.append(0)
                     elif j == self.virus_dim+2:
-                        if (len(parms) == 0):
+                        if (len(params) == 0):
                             tmp.append(svn[i][self.virus_dim+2])
                             self.count = self.count+1
                             tmp.append(f"{self.count}(s)")
@@ -322,7 +224,7 @@ class VOA(object):
                     elif j == self.virus_dim:
                         tmp.append(0)
                     elif j == self.virus_dim+2:
-                        if (len(parms) == 0):
+                        if (len(params) == 0):
                             tmp.append(cvn[i][self.virus_dim+2])
                             self.count = self.count+1
                             tmp.append(self.count)
@@ -393,11 +295,17 @@ class VOA(object):
             current_parameter[i][self.virus_dim] = 1
         return current_parameter, common_kill_amount, strong_kill_amount
 
-# 2.7 主函数
+    def plot_curve(self, lb_fitness):
+        plt.figure(figsize=(10, 6))
+        plt.title("VOA Algorithm", fontsize=20)
+        plt.xlabel("iterations", fontsize=15, labelpad=15)
+        plt.ylabel("f(gb)", fontsize=15, labelpad=20)
+        plt.plot(lb_fitness, color='b')
+        plt.savefig(
+            f'{self.folder}/VOA_{self.model}_{self.file}')
+
     def main(self):
-        '''主函数
-        '''
-        parms = []
+        params = []
         train = []
         test = []
         best_fitness = 0
@@ -409,23 +317,23 @@ class VOA(object):
         iteration = 0
         # initialize
         current_parameter = self.virus_origin()
-        current_parameter, parms, train, test, record = self.fitness(
-            current_parameter, parms, train, test, record)
+        current_parameter, params, train, test, record = self.fitness(
+            current_parameter, params, train, test, record)
 
         print("VOA start!!")
         while(check_virus_limit <= self.total_virus_limit):
             svn, cvn = self.classification(current_parameter)
             current_parameter = self.update(
-                current_parameter, svn, cvn, parms)
+                current_parameter, svn, cvn, params)
 
-            current_parameter, parms, train, test, record = self.fitness(
-                current_parameter, parms, train, test, record)
+            current_parameter, params, train, test, record = self.fitness(
+                current_parameter, params, train, test, record)
 
             best_fitness, best_parameter, lb_fitness, lb_parameter = self.record_best_virus(
                 best_fitness, best_parameter, lb_fitness, lb_parameter, current_parameter)
-            if len(parms) >= self.total_virus_limit:
+            if len(params) >= self.total_virus_limit:
                 iteration = iteration+1
-                log = f"iter: {iteration},local_best_fitness: {lb_fitness[iteration-1]},global best fitness: {best_fitness},totall_virus_count: {len(parms)},\
+                log = f"iter: {iteration},local_best_fitness: {lb_fitness[iteration-1]},global best fitness: {best_fitness},totall_virus_count: {len(params)},\
 virus_count: {len(current_parameter)} VOA finished!!"
                 logging.info(log)
                 break
@@ -438,9 +346,21 @@ virus_count: {len(current_parameter)} VOA finished!!"
                 current_parameter)
 
             iteration = iteration+1
-            log = f"iter: {iteration},local_best_fitness: {lb_fitness[iteration-1]},global best fitness: {best_fitness},totall_virus_count: {len(parms)},\
+            log = f"iter: {iteration},local_best_fitness: {lb_fitness[iteration-1]},global best fitness: {best_fitness},totall_virus_count: {len(params)},\
 virus_count_before_killing: {len(current_parameter)+strong_kill_amount+common_kill_amount},virus_count: {len(current_parameter)},Strong_kill: {strong_kill_amount},Common_kill: {common_kill_amount} survived virus: {survived_virus_count}"
             logging.info(log)
-            check_virus_limit = len(parms)
+            check_virus_limit = len(params)
 
-        return best_fitness, best_parameter, lb_fitness, lb_parameter, parms, train, test
+        self.plot_curve(lb_fitness)
+        logging.info(
+            (f"best_parameter:{best_parameter},best_fitness:{best_fitness}"))
+
+        params_number = [i for i in range(self.virus_dim)]
+
+        data_params = pd.DataFrame(params)[params_number]
+        data_params.columns = self.param_name
+        updata_history = pd.DataFrame(params).drop(params_number, axis=1)
+        results = pd.concat(
+            [pd.DataFrame(train, columns=["train"]), pd.DataFrame(test, columns=["test"]), data_params, updata_history], axis=1)
+
+        return results

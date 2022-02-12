@@ -1,5 +1,6 @@
 {
-    "data_path": "./dataset/Cervical_cancer_ori.csv",
-    "target" : "ca_cervix",
-    "data_name": "Cervical"
+    "data_path": "./dataset/Breast cancer.csv",
+    "target": "Classification",
+    "data_name": "test",
+    "type": "classification"
 }

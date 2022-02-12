@@ -10,15 +10,18 @@ import numpy as np
 import random
 from sklearn.utils import parallel_backend
 import logging
-from tqdm import tqdm, trange
+from tqdm import tqdm
 from sklearn.metrics import make_scorer, recall_score
 specificity = make_scorer(recall_score, pos_label=0)
 
 
 class PSO(object):
-    def __init__(self, particle_num, particle_dim, iter_num, c1, c2, w, model_cfg, X, y, file, model, folder, matrix):
+    def __init__(self, particle_num, particle_dim, iter_num, c1, c2, w, model_cfg, X, y, file, model, folder, matrix, task_type, algo_MLconfig):
         self.folder = folder
         self.model = model
+        self.int_parameter = model_cfg['int_parameter']
+        self.class_parm = model_cfg['class_parameter']
+        self.param_name = model_cfg['param']
         self.file = file
         self.X = X
         self.y = y
@@ -34,68 +37,8 @@ class PSO(object):
             self.matrix = specificity
         else:
             self.matrix = matrix
-
-        if(model == "KNN"):
-            self.max_value_neighbors = model_cfg["max_value_neighbors"]
-            self.min_value_neighbors = model_cfg["min_value_neighbors"]
-            self.max_value_leaf_size = model_cfg["max_value_leaf_size"]
-            self.min_value_leaf_size = model_cfg["min_value_leaf_size"]
-            self.max_value_weights = model_cfg["max_value_weights"]
-            self.min_value_weights = model_cfg["min_value_weights"]
-            self.max_value_algorithm = model_cfg["max_value_algorithm"]
-            self.min_value_algorithm = model_cfg["min_value_algorithm"]
-            self.max_value_metric = model_cfg["max_value_metric"]
-            self.min_value_metric = model_cfg["min_value_metric"]
-            if model_cfg["type"] == "classification":
-                self.sklearn = KNeighborsClassifier
-            elif model_cfg["type"] == "regression":
-                self.sklearn = KNeighborsRegressor
-
-        elif(model == "MLP"):
-            self.max_value_hidden_layer_1 = model_cfg['max_value_hidden_layer_1']
-            self.min_value_hidden_layer_1 = model_cfg['min_value_hidden_layer_1']
-            self.max_value_hidden_layer_2 = model_cfg['max_value_hidden_layer_2']
-            self.min_value_hidden_layer_2 = model_cfg['min_value_hidden_layer_2']
-            self.max_value_alpha = model_cfg['max_value_alpha']
-            self.min_value_alpha = model_cfg['min_value_alpha']
-            self.max_value_learning_rate_init = model_cfg['max_value_learning_rate_init']
-            self.min_value_learning_rate_init = model_cfg['min_value_learning_rate_init']
-            self.max_value_max_iter = model_cfg['max_value_max_iter']
-            self.min_value_max_iter = model_cfg['min_value_max_iter']
-            self.max_value_tol = model_cfg['max_value_tol']
-            self.min_value_tol = model_cfg['min_value_tol']
-            self.max_value_beta_1 = model_cfg['max_value_beta_1']
-            self.min_value_beta_1 = model_cfg['min_value_beta_1']
-            self.max_value_beta_2 = model_cfg['max_value_beta_1']
-            self.min_value_beta_2 = model_cfg['min_value_beta_2']
-            self.max_value_n_iter_no_change = model_cfg['max_value_n_iter_no_change']
-            self.min_value_n_iter_no_change = model_cfg['min_value_n_iter_no_change']
-            self.max_value_activation = model_cfg['max_value_activation']
-            self.min_value_activation = model_cfg['min_value_activation']
-            self.max_value_solver = model_cfg['max_value_solver']
-            self.min_value_solver = model_cfg['min_value_solver']
-            self.max_value_learning_rate = model_cfg['max_value_learning_rate']
-            self.min_value_learning_rate = model_cfg['min_value_learning_rate']
-            if model_cfg["type"] == "classification":
-                self.sklearn = MLPClassifier
-            elif model_cfg["type"] == "regression":
-                self.sklearn = MLPRegressor
-
-        elif(model == "SVM"):
-            self.max_value_c = model_cfg['max_value_c']
-            self.min_value_c = model_cfg['min_value_c']
-            self.max_value_tol = model_cfg['max_value_tol']
-            self.min_value_tol = model_cfg['min_value_tol']
-            self.max_value_max_iter = model_cfg['max_value_max_iter']
-            self.min_value_max_iter = model_cfg['min_value_max_iter']
-            self.max_value_gamma = model_cfg['max_value_gamma']
-            self.min_value_gamma = model_cfg['min_value_gamma']
-            self.max_value_kernal = model_cfg['max_value_kernal']
-            self.min_value_kernal = model_cfg['min_value_kernal']
-            if model_cfg["type"] == "classification":
-                self.sklearn = SVC
-            elif model_cfg["type"] == "regression":
-                self.sklearn = SVR
+        self.max_min, self.ML_model = algo_MLconfig(
+            model, task_type, model_cfg)
 
 # 2.1 粒子群初始化
     def swarm_origin(self):
@@ -106,208 +49,57 @@ class PSO(object):
             tmp2 = []
             for j in range(self.particle_dim):
                 a = random.random()
-                if(self.model == "KNN"):
-                    if (j == 0):
-                        tmp1.append(round(
-                            a * (self.max_value_neighbors - self.min_value_neighbors) + self.min_value_neighbors))
-                        tmp2.append(
-                            random.uniform(-self.max_value_neighbors/3, self.max_value_neighbors/3))
-                    elif (j == 1):
-                        tmp1.append(round(
-                            (a * (self.max_value_leaf_size - self.min_value_leaf_size) + self.min_value_leaf_size)))
-                        tmp2.append(
-                            random.uniform(-self.max_value_leaf_size/3, self.max_value_leaf_size/3))
-                    elif(j == 2):
-                        tmp1.append(round(
-                            (a * (self.max_value_weights - self.min_value_weights) + self.min_value_weights)))
-                        tmp2.append(
-                            random.uniform(-self.max_value_weights/3, self.max_value_weights/3))
-                    elif(j == 3):
-                        tmp1.append(round(
-                            (a * (self.max_value_algorithm - self.min_value_algorithm) + self.min_value_algorithm)))
-                        tmp2.append(
-                            random.uniform(-self.max_value_algorithm/3, self.max_value_algorithm/3))
-                    elif(j == 4):
-                        tmp1.append(round(
-                            (a * (self.max_value_metric - self.min_value_metric) + self.min_value_metric)))
-                        tmp2.append(
-                            random.uniform(-self.max_value_metric/3, self.max_value_metric/3))
-
-                elif(self.model == "MLP"):
-                    if (j == 0):
-                        tmp1.append(round(a * (self.max_value_hidden_layer_1 -
-                                               self.min_value_hidden_layer_1) + self.min_value_hidden_layer_1))
-                        tmp2.append(
-                            random.uniform(-self.max_value_hidden_layer_1/3, self.max_value_hidden_layer_1/3))
-                    elif (j == 1):
-                        tmp1.append(round(a * (self.max_value_hidden_layer_2 -
-                                               self.min_value_hidden_layer_2) + self.min_value_hidden_layer_2))
-                        tmp2.append(
-                            random.uniform(-self.max_value_hidden_layer_2/3, self.max_value_hidden_layer_2/3))
-                    elif (j == 2):
-                        tmp1.append(round(
-                            (a * (self.max_value_alpha - self.min_value_alpha) + self.min_value_alpha), 5))
-                        tmp2.append(
-                            random.uniform(-self.max_value_alpha/3, self.max_value_alpha/3))
-                    elif(j == 3):
-                        tmp1.append(round((a * (self.max_value_learning_rate_init -
-                                                self.min_value_learning_rate_init) + self.min_value_learning_rate_init), 4))
-                        tmp2.append(random.uniform(-self.max_value_learning_rate_init /
-                                                   3, self.max_value_learning_rate_init/3))
-                    elif(j == 4):
-                        tmp1.append(round(a * (self.max_value_max_iter -
-                                               self.min_value_max_iter) + self.min_value_max_iter))
-                        tmp2.append(
-                            random.uniform(-self.max_value_max_iter/3, self.max_value_max_iter/3))
-                    elif(j == 5):
-                        tmp1.append(
-                            round((a * (self.max_value_tol - self.min_value_tol) + self.min_value_tol), 5))
-                        tmp2.append(
-                            random.uniform(-self.max_value_tol/3, self.max_value_tol/3))
-                    elif(j == 6):
-                        tmp1.append(round(
-                            (a * (self.max_value_beta_1 - self.min_value_beta_1) + self.min_value_beta_1), 4))
-                        tmp2.append(
-                            random.uniform(-self.max_value_beta_1/3, self.max_value_beta_1/3))
-                    elif(j == 7):
-                        tmp1.append(round(
-                            (a * (self.max_value_beta_2 - self.min_value_beta_2) + self.min_value_beta_2), 4))
-                        tmp2.append(
-                            random.uniform(-self.max_value_beta_2/3, self.max_value_beta_2/3))
-                    elif(j == 8):
-                        tmp1.append(round((a * (self.max_value_n_iter_no_change -
-                                                self.min_value_n_iter_no_change) + self.min_value_n_iter_no_change)))
-                        tmp2.append(
-                            random.uniform(-self.max_value_n_iter_no_change/3, self.max_value_n_iter_no_change/3))
-                    elif(j == 9):
-                        tmp1.append(round((a * (self.max_value_activation -
-                                                self.min_value_activation) + self.min_value_activation)))
-                        tmp2.append(
-                            random.uniform(-self.max_value_activation/3, self.max_value_activation/3))
-                    elif(j == 10):
-                        tmp1.append(round(
-                            (a * (self.max_value_solver - self.min_value_solver) + self.min_value_solver)))
-                        tmp2.append(
-                            random.uniform(-self.max_value_solver/3, self.max_value_solver/3))
-                    elif(j == 11):
-                        tmp1.append(round((a * (self.max_value_learning_rate -
-                                                self.min_value_learning_rate) + self.min_value_learning_rate)))
-                        tmp2.append(
-                            random.uniform(-self.max_value_learning_rate/3, self.max_value_learning_rate/3))
-
-                elif(self.model == "SVM"):
-                    if (j == 0):
-                        tmp1.append(
-                            (a * (self.max_value_c - self.min_value_c) + self.min_value_c))
-                        tmp2.append(
-                            random.uniform(-self.max_value_c/3, self.max_value_c/3))
-                    elif (j == 1):
-                        tmp1.append(
-                            (a * (self.max_value_tol - self.min_value_tol) + self.min_value_tol))
-                        tmp2.append(
-                            random.uniform(-self.max_value_tol/3, self.max_value_tol/3))
-                    elif(j == 2):
-                        tmp1.append(
-                            (a * (self.max_value_max_iter - self.min_value_max_iter) + self.min_value_max_iter))
-                        tmp2.append(
-                            random.uniform(-self.max_value_max_iter/3, self.max_value_max_iter/3))
-                    elif(j == 3):
-                        tmp1.append(
-                            (a * (self.max_value_gamma - self.min_value_gamma) + self.min_value_gamma))
-                        tmp2.append(
-                            random.uniform(-self.max_value_gamma/3, self.max_value_gamma/3))
-                    elif(j == 4):
-                        tmp1.append(round(
-                            (a * (self.max_value_kernal - self.min_value_kernal) + self.min_value_kernal)))
-                        tmp2.append(
-                            random.uniform(-self.max_value_kernal/3, self.max_value_kernal/3))
+                if j in self.int_parameter:
+                    tmp1.append(
+                        int(a * (self.max_min[j][0] - self.max_min[j][1]) + self.max_min[j][1]))
+                else:
+                    tmp1.append(
+                        (a * (self.max_min[j][0] - self.max_min[j][1]) + self.max_min[j][1]))
+                tmp2.append(
+                    random.uniform(-self.max_min[j][0] / 3, self.max_min[j][0] / 3))
             particle_loc.append(tmp1)
             particle_dir.append(tmp2)
-
         return particle_loc, particle_dir
 
     def fitness(self, particle_loc, test, train, parms):
         fitness_value = []
         for i in range(self.particle_num):
+            class_particle = []
+            for index, class_num in enumerate(self.class_parm['class_number']):
+                count = 1
+                for class_name in self.class_parm['class_name'][index]:
+                    if(count-1 < particle_loc[i][class_num] <= count):
+                        class_particle.append(class_name)
+                        break
+                    else:
+                        count += 1
+
             if(self.model == "KNN"):
-                if(particle_loc[i][2] == 1):
-                    weights = "uniform"
-                elif(particle_loc[i][2] == 2):
-                    weights = "distance"
-
-                if(particle_loc[i][3] == 1):
-                    algorithm = "ball_tree"
-                elif(particle_loc[i][3] == 2):
-                    algorithm = "kd_tree"
-                elif(particle_loc[i][3] == 3):
-                    algorithm = "brute"
-                elif(particle_loc[i][3] == 4):
-                    algorithm = "auto"
-
-                if(particle_loc[i][4] == 1):
-                    metric = "euclidean"
-                elif(particle_loc[i][4] == 2):
-                    metric = "manhattan"
-                elif(particle_loc[i][4] == 3):
-                    metric = "chebyshev"
-
                 with parallel_backend('threading'):
-                    knn = self.sklearn(n_neighbors=particle_loc[i][0], weights=weights, algorithm=algorithm,
-                                       leaf_size=particle_loc[i][1], metric=metric, metric_params=None, n_jobs=-1,)
+                    knn = self.ML_model(n_neighbors=particle_loc[i][0], weights=class_particle[0], algorithm=class_particle[1],
+                                        leaf_size=particle_loc[i][1], metric=class_particle[2], metric_params=None, n_jobs=-1,)
                     cv_scores = cross_validate(
                         knn, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
                 parms.append([particle_loc[i][0], particle_loc[i]
-                              [1], weights, algorithm, metric])
+                              [1], class_particle[0], class_particle[1], class_particle[2]])
 
             elif(self.model == "MLP"):
-                if(particle_loc[i][9] == 1):
-                    activation = "identity"
-                elif(particle_loc[i][9] == 2):
-                    activation = "logistic"
-                elif(particle_loc[i][9] == 3):
-                    activation = "tanh"
-                elif(particle_loc[i][9] == 4):
-                    activation = "relu"
-
-                if(particle_loc[i][10] == 1):
-                    solver = "lbfgs"
-                elif(particle_loc[i][10] == 2):
-                    solver = "sgd"
-                elif(particle_loc[i][10] == 3):
-                    solver = "adam"
-
-                if(particle_loc[i][11] == 1):
-                    learning_rate = "constant"
-                elif(particle_loc[i][11] == 2):
-                    learning_rate = "invscaling"
-                elif(particle_loc[i][11] == 3):
-                    learning_rate = "adaptive"
-
                 with parallel_backend('threading'):
-                    mlp = self.sklearn(hidden_layer_sizes=[particle_loc[i][0], particle_loc[i][1]], activation=activation, solver=solver, alpha=particle_loc[i][2], batch_size='auto', learning_rate=learning_rate, learning_rate_init=particle_loc[i][3], max_iter=particle_loc[i]
-                                       [4], shuffle=True, random_state=None, tol=particle_loc[i][5], verbose=False, warm_start=False, nesterovs_momentum=True, early_stopping=False, beta_1=particle_loc[i][6], beta_2=particle_loc[i][7], epsilon=1e-08, n_iter_no_change=particle_loc[i][8])
+                    mlp = self.ML_model(hidden_layer_sizes=[particle_loc[i][0], particle_loc[i][1]], activation=class_particle[0], solver=class_particle[1], alpha=particle_loc[i][2], batch_size='auto', learning_rate=class_particle[2], learning_rate_init=particle_loc[i][3], max_iter=particle_loc[i]
+                                        [4], shuffle=True, random_state=None, tol=particle_loc[i][5], verbose=False, warm_start=False, nesterovs_momentum=True, early_stopping=False, beta_1=particle_loc[i][6], beta_2=particle_loc[i][7], epsilon=1e-08, n_iter_no_change=particle_loc[i][8])
                     cv_scores = cross_validate(
                         mlp, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
                 parms.append([particle_loc[i][0], particle_loc[i][1], particle_loc[i][2], particle_loc[i][3], particle_loc[i][4],
-                              particle_loc[i][5], particle_loc[i][6], particle_loc[i][7], particle_loc[i][8], activation, solver, learning_rate])
+                              particle_loc[i][5], particle_loc[i][6], particle_loc[i][7], particle_loc[i][8], class_particle[0], class_particle[1], class_particle[2]])
 
             elif (self.model == "SVM"):
-                if(particle_loc[i][4] == 1):
-                    kernel = "linear"
-                elif(particle_loc[i][4] == 2):
-                    kernel = "poly"
-                elif(particle_loc[i][4] == 3):
-                    kernel = "rbf"
-                elif(particle_loc[i][4] == 4):
-                    kernel = "sigmoid"
-
                 with parallel_backend('threading'):
-                    svm = self.sklearn(C=particle_loc[i][0], tol=particle_loc[i][1],
-                                       max_iter=particle_loc[i][2], gamma=particle_loc[i][3], cache_size=1000)
+                    svm = self.ML_model(C=particle_loc[i][0], tol=particle_loc[i][1],
+                                        max_iter=particle_loc[i][2], gamma=particle_loc[i][3], kernel=class_particle[0], cache_size=1000)
                     cv_scores = cross_validate(
                         svm, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
                 parms.append([particle_loc[i][0], particle_loc[i][1],
-                              particle_loc[i][2], particle_loc[i][3], kernel])
+                              particle_loc[i][2], particle_loc[i][3], class_particle[0]])
 
             self.count += 1
             logging.info(
@@ -350,77 +142,12 @@ class PSO(object):
 
         for i in range(self.particle_num):
             for j in range(self.particle_dim):
-                if(self.model == "KNN"):
-                    if (j == 0):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_neighbors - self.min_value_neighbors)+self.min_value_neighbors))
-                    elif (j == 1):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_leaf_size - self.min_value_leaf_size) + self.min_value_leaf_size))
-                    elif(j == 2):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_weights - self.min_value_weights) + self.min_value_weights))
-                    elif(j == 3):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_algorithm - self.min_value_algorithm) + self.min_value_algorithm))
-                    elif(j == 4):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_metric - self.min_value_metric) + self.min_value_metric))
-
-                elif(self.model == "MLP"):
-                    if (j == 0):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_hidden_layer_1 - self.min_value_hidden_layer_1) + self.min_value_hidden_layer_1))
-                    elif (j == 1):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_hidden_layer_2 - self.min_value_hidden_layer_2) + self.min_value_hidden_layer_2))
-                    elif (j == 2):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_alpha - self.min_value_alpha) + self.min_value_alpha), 5)
-                    elif(j == 3):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_learning_rate_init - self.min_value_learning_rate_init) + self.min_value_learning_rate_init), 4)
-                    elif(j == 4):
-                        particle_loc[i][j] = round((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_max_iter - self.min_value_max_iter) + self.min_value_max_iter)
-                    elif(j == 5):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_tol - self.min_value_tol) + self.min_value_tol), 5)
-                    elif(j == 6):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_beta_1 - self.min_value_beta_1) + self.min_value_beta_1), 4)
-                    elif(j == 7):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_beta_2 - self.min_value_beta_2) + self.min_value_beta_2), 4)
-                    elif(j == 8):
-                        particle_loc[i][j] = round((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_n_iter_no_change - self.min_value_n_iter_no_change) + self.min_value_n_iter_no_change)
-                    elif(j == 9):
-                        particle_loc[i][j] = round((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_activation - self.min_value_activation) + self.min_value_activation)
-                    elif(j == 10):
-                        particle_loc[i][j] = round((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_solver - self.min_value_solver) + self.min_value_solver)
-                    elif(j == 11):
-                        particle_loc[i][j] = round((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_learning_rate - self.min_value_learning_rate) + self.min_value_learning_rate)
-
-                elif(self.model == "SVM"):
-                    if (j == 0):
-                        particle_loc[i][j] = ((particle_loc[i][j] - value[j][1])/(
-                            value[j][0] - value[j][1]) * (self.max_value_c - self.min_value_c) + self.min_value_c)
-                    elif (j == 1):
-                        particle_loc[i][j] = ((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_tol - self.min_value_tol) + self.min_value_tol)
-                    elif(j == 2):
-                        particle_loc[i][j] = ((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_max_iter - self.min_value_max_iter) + self.min_value_max_iter)
-                    elif(j == 3):
-                        particle_loc[i][j] = ((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_gamma - self.min_value_gamma) + self.min_value_gamma)
-                    elif(j == 4):
-                        particle_loc[i][j] = round(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
-                            self.max_value_kernal - self.min_value_kernal) + self.min_value_kernal))
+                if j in self.int_parameter:
+                    particle_loc[i][j] = int(((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
+                        self.max_min[j][0] - self.max_min[j][1]) + self.max_min[j][1]))
+                else:
+                    particle_loc[i][j] = (((particle_loc[i][j] - value[j][1])/(value[j][0] - value[j][1]) * (
+                        self.max_min[j][0] - self.max_min[j][1]) + self.max_min[j][1]))
 
         return particle_loc, particle_dir
 
@@ -499,9 +226,12 @@ class PSO(object):
         results.sort()
         self.plot(results, results_ave, good_fitness)
 
-        logging.info(f'Final parameters are :{gbest_parameter}')
-        print('Final parameters are :', gbest_parameter)
+        logging.info(
+            f'Final parameters are: , {self.param_name}, \n, {gbest_parameter}')
+        print('Final parameters are :', self.param_name, "\n", gbest_parameter)
         results = pd.concat(
-            [pd.Series(train), pd.Series(test), pd.Series(parms)], axis=1)
-        results.columns = ['train', 'test', 'parameters']
+            [pd.Series(train), pd.Series(test)], axis=1)
+        results = pd.concat(
+            [pd.DataFrame(results), pd.DataFrame(parms)], axis=1)
+        results.columns = ['train', 'test'] + self.param_name
         return results

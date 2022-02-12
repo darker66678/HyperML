@@ -1,15 +1,38 @@
 {
     "param_setting": {
-        "max_value_c"  : 1000,
-        "min_value_c"  : 1,
-        "max_value_tol"  : 0.8,
-        "min_value_tol"  : 0.00001,
-        "max_value_max_iter":200000,
-        "min_value_max_iter":100,
-        "max_value_gamma":500,
-        "min_value_gamma":0.0001,
-        "max_value_kernal":4,
-        "min_value_kernal":1},
-    "int_param":[0,2],
-    "type": "regression"
+        "max_value_c": 1000,
+        "min_value_c": 1,
+        "max_value_tol": 0.8,
+        "min_value_tol": 0.00001,
+        "max_value_max_iter": 200000,
+        "min_value_max_iter": 100,
+        "max_value_gamma": 500,
+        "min_value_gamma": 0.0001,
+        "max_value_kernal": 4,
+        "min_value_kernal": 1
+    },
+    "param": [
+        "c",
+        "tol",
+        "max_iter",
+        "gamma",
+        "kernal"
+    ],
+    "int_param": [
+        0,
+        2
+    ],
+    "class_param": {
+        "class_number": [
+            4
+        ],
+        "class_name": [
+            [
+                "linear",
+                "poly",
+                "rbf",
+                "sigmoid"
+            ]
+        ]
+    }
 }
