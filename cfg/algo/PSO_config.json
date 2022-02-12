@@ -1,6 +1,6 @@
 {
     "particle_num": 20,
-    "iter_num": 30,
+    "iter_num": 2,
     "c1": 2,
     "c2": 2,
     "w": 0.8

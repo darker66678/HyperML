@@ -92,9 +92,10 @@ class VOA(object):
 
                 elif(self.model == "MLP"):
                     with parallel_backend('threading'):
-                        mlp = self.ML_model(hidden_layer_sizes=[current_parameter[i][0], current_parameter[i][1]], activation=class_particle[0], solver=class_particle[1], alpha=current_parameter[i][2], batch_size='auto',
-                                            learning_rate=class_particle[2], learning_rate_init=current_parameter[i][3], max_iter=current_parameter[i][4], shuffle=True, random_state=None, tol=current_parameter[i][5],
-                                            verbose=False, warm_start=False, nesterovs_momentum=True, early_stopping=False, beta_1=current_parameter[i][6], beta_2=current_parameter[i][7], epsilon=1e-08,
+                        mlp = self.ML_model(hidden_layer_sizes=[current_parameter[i][0], current_parameter[i][1]], activation=class_particle[0], solver=class_particle[1], alpha=current_parameter[i][2],
+                                            learning_rate=class_particle[2], learning_rate_init=current_parameter[i][
+                                                3], max_iter=current_parameter[i][4],  tol=current_parameter[i][5],
+                                            beta_1=current_parameter[i][6], beta_2=current_parameter[i][7],
                                             n_iter_no_change=current_parameter[i][8])
                         cv_scores = cross_validate(
                             mlp, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
@@ -107,8 +108,8 @@ class VOA(object):
 
                 elif(self.model == "SVM"):
                     with parallel_backend('threading'):
-                        svm = self.ML_model(C=current_parameter[i][0], kernel=class_particle[0], degree=3, gamma=current_parameter[i][3], coef0=0.0, shrinking=True,
-                                            probability=False, tol=current_parameter[i][1], cache_size=1000, class_weight=None, max_iter=current_parameter[i][2])
+                        svm = self.ML_model(C=current_parameter[i][0], kernel=class_particle[0],  gamma=current_parameter[i]
+                                            [3], tol=current_parameter[i][1], cache_size=1000, max_iter=current_parameter[i][2])
                         cv_scores = cross_validate(
                             svm, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
                     print(len(params), cv_scores['test_score'].mean())
@@ -363,4 +364,4 @@ virus_count_before_killing: {len(current_parameter)+strong_kill_amount+common_ki
         results = pd.concat(
             [pd.DataFrame(train, columns=["train"]), pd.DataFrame(test, columns=["test"]), data_params, updata_history], axis=1)
 
-        return results
+        return results, self.ML_model, best_parameter, self.class_parm

@@ -10,6 +10,9 @@ from VOA import VOA
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.svm import SVC, SVR
 from sklearn.neural_network import MLPClassifier, MLPRegressor
+from sklearn.metrics import plot_confusion_matrix
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 
 
 def load_KNN_cfg(model_cfg):
@@ -145,7 +148,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
         starttime = datetime.datetime.now()
         pso = PSO(particle_num, particle_dim, iter_num, c1,
                   c2, w, model_cfg, X, y, file, args.model, folder, args.matrix, task_type, algo_MLconfig)
-        results = pso.main()
+        results, ML_model, best_parameter, class_param = pso.main()
         endtime = datetime.datetime.now()
         logging.info(f"time: {endtime - starttime}")
         logging.info("-----------------------\n\n")
@@ -170,7 +173,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
         starttime = datetime.datetime.now()
         voa = VOA(virus_num, virus_dim, strong_growth_rate,
                   common_growth_rate, s_proportion, total_virus_limit, intensity, model_cfg, X, y, args.model, args.matrix, task_type, folder, file, algo_MLconfig)
-        results = voa.main()
+        results, ML_model, best_parameter, class_param = voa.main()
         endtime = datetime.datetime.now()
         logging.info((f"time:{endtime - starttime} "))
         logging.info("-----------------------\n\n")
@@ -178,10 +181,14 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
         print("---------------------------")
         results.to_csv(
             f'{folder}/{args.algo}({args.model})_{file}.csv')
-        print("finished!!!")
 
     boxpath = f'{folder}/{args.algo}_{args.model}_{file}_box.jpg'
     plot_boxplot(results, boxpath)
+    predict_data = model_predict(
+        args.model, ML_model, best_parameter, class_param, X, y, task_type, folder)
+    predict_data.to_csv(
+        f'{folder}/{args.algo}({args.model})_{file}_predict.csv')
+    print("finished!!!")
 
 
 def algo_MLconfig(model, task_type, model_cfg):
@@ -246,3 +253,35 @@ def algo_MLconfig(model, task_type, model_cfg):
         elif task_type == "regression":
             ML_model = SVR
     return max_min, ML_model
+
+
+def model_predict(model, ML_model, best_parameter, class_param, X, y, task_type, folder):
+    for index, class_num in enumerate(class_param['class_number']):
+        count = 1
+        for class_name in class_param['class_name'][index]:
+            if(count-1 < best_parameter[class_num] <= count):
+                best_parameter[class_num] = class_name
+                break
+            else:
+                count += 1
+    if(model == "KNN"):
+        predictor = ML_model(n_neighbors=best_parameter[0], leaf_size=best_parameter[1], metric=best_parameter[4],  weights=best_parameter[2],
+                             algorithm=best_parameter[3], n_jobs=-1)
+    elif(model == "MLP"):
+        predictor = ML_model(hidden_layer_sizes=[best_parameter[0], best_parameter[1]],  alpha=best_parameter[2], learning_rate_init=best_parameter[3], max_iter=best_parameter[4], tol=best_parameter[5],
+                             beta_1=best_parameter[6], beta_2=best_parameter[7], n_iter_no_change=best_parameter[8], activation=best_parameter[9], solver=best_parameter[10], learning_rate=best_parameter[11])
+    elif(model == "SVM"):
+        predictor = ML_model(C=best_parameter[0], tol=best_parameter[1], max_iter=best_parameter[2],
+                             gamma=best_parameter[3], cache_size=1000, kernel=best_parameter[4])
+    cofusion_model = predictor
+    predictor.fit(X, y)
+    pre = predictor.predict(X)
+    predict_data = pd.concat(
+        [X, pd.DataFrame(y),  pd.DataFrame(pre, columns=['predict'])], axis=1)
+    if task_type == 'classification':
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=1)
+        cofusion_model.fit(X_train, y_train)
+        plot_confusion_matrix(predictor, X_test, y_test)
+        plt.savefig(f'{folder}/{model}_confusion_matrix')
+    return predict_data

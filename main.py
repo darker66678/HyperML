@@ -12,9 +12,9 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", help="KNN,MLP,SVM", default="SVM")
+    parser.add_argument("--model", help="KNN,MLP,SVM", default="KNN")
     parser.add_argument(
-        "--data", help="cancer,machine,custom", default="custom")
+        "--data", help="custom", default="custom")
     parser.add_argument("--algo", help="PSO,VOA", default="VOA")
     parser.add_argument(
         "--matrix", help="cls: accuracy, f1, recall, precision, specificity; reg: r2, neg_mean_absolute_error, neg_mean_squared_error", default="accuracy")

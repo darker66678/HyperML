@@ -40,7 +40,6 @@ class PSO(object):
         self.max_min, self.ML_model = algo_MLconfig(
             model, task_type, model_cfg)
 
-# 2.1 粒子群初始化
     def swarm_origin(self):
         particle_loc = []
         particle_dir = []
@@ -234,4 +233,4 @@ class PSO(object):
         results = pd.concat(
             [pd.DataFrame(results), pd.DataFrame(parms)], axis=1)
         results.columns = ['train', 'test'] + self.param_name
-        return results
+        return results, self.ML_model, gbest_parameter, self.class_parm
