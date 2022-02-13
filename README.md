@@ -28,3 +28,6 @@ In anaconda, ```conda create --name test python=3.8 ``` can create a new env
 
  The results will be saved in ```./results```
 
+### Video
+[Tutorial](https://drive.google.com/file/d/1sJkAqQfD991WuM9SoE5HFG3WOh9dtvVJ/view?usp=sharing)
+
