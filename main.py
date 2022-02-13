@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument("--model", help="KNN,MLP,SVM", default="KNN")
     parser.add_argument(
         "--data", help="custom", default="custom")
-    parser.add_argument("--algo", help="PSO,VOA", default="PSO")
+    parser.add_argument("--algo", help="PSO,VOA", default="VOA")
     parser.add_argument(
         "--scoring", help="cls: accuracy, f1, recall, precision, specificity; reg: r2, neg_mean_absolute_error, neg_mean_squared_error", default="accuracy")
     args = parser.parse_args()

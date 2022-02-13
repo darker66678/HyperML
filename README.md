@@ -23,7 +23,7 @@ In anaconda, ```conda create --name test python=3.8 ``` can create a new env
 
 ```pip install -r requirements.txt``` install all packages
 ###  Hyperparameter tuning
-```python main.py --model [ML_model]--algo [Heuristic] --scoring [score]```
+```python main.py --model [ML_model] --algo [Heuristic] --scoring [score]```
  start to tune the hyperparameters with heuristic
 
  The results will be saved in ```./results```
