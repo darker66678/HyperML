@@ -16,7 +16,7 @@ specificity = make_scorer(recall_score, pos_label=0)
 
 
 class PSO(object):
-    def __init__(self, particle_num, particle_dim, iter_num, c1, c2, w, model_cfg, X, y, file, model, folder, matrix, task_type, algo_MLconfig):
+    def __init__(self, particle_num, particle_dim, iter_num, c1, c2, w, model_cfg, X, y, file, model, folder, scoring, task_type, algo_MLconfig):
         self.folder = folder
         self.model = model
         self.int_parameter = model_cfg['int_parameter']
@@ -33,10 +33,10 @@ class PSO(object):
         self.w = w
         self.count = 0
 
-        if matrix == 'specificity':
-            self.matrix = specificity
+        if scoring == 'specificity':
+            self.scoring = specificity
         else:
-            self.matrix = matrix
+            self.scoring = scoring
         self.max_min, self.ML_model = algo_MLconfig(
             model, task_type, model_cfg)
 
@@ -78,7 +78,7 @@ class PSO(object):
                     knn = self.ML_model(n_neighbors=particle_loc[i][0], weights=class_particle[0], algorithm=class_particle[1],
                                         leaf_size=particle_loc[i][1], metric=class_particle[2], metric_params=None, n_jobs=-1,)
                     cv_scores = cross_validate(
-                        knn, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
+                        knn, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                 parms.append([particle_loc[i][0], particle_loc[i]
                               [1], class_particle[0], class_particle[1], class_particle[2]])
 
@@ -87,7 +87,7 @@ class PSO(object):
                     mlp = self.ML_model(hidden_layer_sizes=[particle_loc[i][0], particle_loc[i][1]], activation=class_particle[0], solver=class_particle[1], alpha=particle_loc[i][2], batch_size='auto', learning_rate=class_particle[2], learning_rate_init=particle_loc[i][3], max_iter=particle_loc[i]
                                         [4], shuffle=True, random_state=None, tol=particle_loc[i][5], verbose=False, warm_start=False, nesterovs_momentum=True, early_stopping=False, beta_1=particle_loc[i][6], beta_2=particle_loc[i][7], epsilon=1e-08, n_iter_no_change=particle_loc[i][8])
                     cv_scores = cross_validate(
-                        mlp, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
+                        mlp, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                 parms.append([particle_loc[i][0], particle_loc[i][1], particle_loc[i][2], particle_loc[i][3], particle_loc[i][4],
                               particle_loc[i][5], particle_loc[i][6], particle_loc[i][7], particle_loc[i][8], class_particle[0], class_particle[1], class_particle[2]])
 
@@ -96,7 +96,7 @@ class PSO(object):
                     svm = self.ML_model(C=particle_loc[i][0], tol=particle_loc[i][1],
                                         max_iter=particle_loc[i][2], gamma=particle_loc[i][3], kernel=class_particle[0], cache_size=1000)
                     cv_scores = cross_validate(
-                        svm, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
+                        svm, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                 parms.append([particle_loc[i][0], particle_loc[i][1],
                               particle_loc[i][2], particle_loc[i][3], class_particle[0]])
 
@@ -165,7 +165,7 @@ class PSO(object):
         plt.plot(X, good_fitness, label="best fitness each iteration",
                  color='orange')
         plt.xlabel('Number of iteration', size=15)
-        plt.ylabel(f'{self.matrix} Score', size=15)
+        plt.ylabel(f'{self.scoring} Score', size=15)
         plt.title(f'PSO tunes {self.model} hyperparameter optimization')
         plt.legend(loc='best')
         plt.savefig(f'{self.folder}/PSO_{self.model}_{self.file}')

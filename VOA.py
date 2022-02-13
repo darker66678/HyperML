@@ -14,7 +14,7 @@ specificity = make_scorer(recall_score, pos_label=0)
 
 class VOA(object):
     def __init__(self, virus_num, virus_dim, strong_growth_rate, common_growth_rate, s_proportion, total_virus_limit,
-                 intensity, model_cfg, X, y, model, matrix, task_type, folder, file, algo_MLconfig):
+                 intensity, model_cfg, X, y, model, scoring, task_type, folder, file, algo_MLconfig):
 
         self.virus_num = virus_num
         self.virus_dim = virus_dim
@@ -30,10 +30,10 @@ class VOA(object):
         self.X = X
         self.y = y
         self.model = model
-        if matrix == 'specificity':
-            self.matrix = specificity
+        if scoring == 'specificity':
+            self.scoring = specificity
         else:
-            self.matrix = matrix
+            self.scoring = scoring
         self.folder = folder
         self.file = file
         # -------------------------------------------------------------
@@ -84,7 +84,7 @@ class VOA(object):
                         knn = self.ML_model(
                             n_neighbors=current_parameter[i][0], weights=class_particle[0], algorithm=class_particle[1], leaf_size=current_parameter[i][1], metric=class_particle[2], n_jobs=-1)
                         cv_scores = cross_validate(
-                            knn, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
+                            knn, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                     print(i, cv_scores['test_score'].mean())
                     if(record == True):
                         params.append([current_parameter[i][0], current_parameter[i][1], class_particle[0],
@@ -98,7 +98,7 @@ class VOA(object):
                                             beta_1=current_parameter[i][6], beta_2=current_parameter[i][7],
                                             n_iter_no_change=current_parameter[i][8])
                         cv_scores = cross_validate(
-                            mlp, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
+                            mlp, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                     print(len(params), cv_scores['test_score'].mean())
                     if(record == True):
                         params.append(
@@ -111,7 +111,7 @@ class VOA(object):
                         svm = self.ML_model(C=current_parameter[i][0], kernel=class_particle[0],  gamma=current_parameter[i]
                                             [3], tol=current_parameter[i][1], cache_size=1000, max_iter=current_parameter[i][2])
                         cv_scores = cross_validate(
-                            svm, self.X, self.y, cv=5, scoring=self.matrix, n_jobs=-1, return_train_score=True)
+                            svm, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                     print(len(params), cv_scores['test_score'].mean())
                     if(record == True):
                         params.append(

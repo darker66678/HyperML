@@ -4,6 +4,6 @@
     "s_proportion": 0.1,
     "strong_growth_rate": 3,
     "common_growth_rate": 2,
-    "total_virus_limit": 20,
+    "total_virus_limit": 600,
     "intensity": 1
 }

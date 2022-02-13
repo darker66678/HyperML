@@ -1,5 +1,7 @@
-tqdm
-pandas
-numpy
-scikit-learn  
-plotly
+tqdm==4.62.3
+pandas==1.4.1
+numpy==1.22.2
+scikit-learn==1.0.2 
+plotly==5.6.0
+matplotlib==3.5.1
+kaleido==0.2.1

@@ -10,7 +10,7 @@ from VOA import VOA
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.svm import SVC, SVR
 from sklearn.neural_network import MLPClassifier, MLPRegressor
-from sklearn.metrics import plot_confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
@@ -117,7 +117,7 @@ def load_data(data, cfg):
 
 
 def plot_boxplot(data, boxpath):
-    fig = px.box(data, y="test", title=boxpath[:-4])
+    fig = px.box(data, y="test", title=boxpath[:-4].split("/")[-1])
     fig.write_image(boxpath)
 
 
@@ -147,7 +147,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
 
         starttime = datetime.datetime.now()
         pso = PSO(particle_num, particle_dim, iter_num, c1,
-                  c2, w, model_cfg, X, y, file, args.model, folder, args.matrix, task_type, algo_MLconfig)
+                  c2, w, model_cfg, X, y, file, args.model, folder, args.scoring, task_type, algo_MLconfig)
         results, ML_model, best_parameter, class_param = pso.main()
         endtime = datetime.datetime.now()
         logging.info(f"time: {endtime - starttime}")
@@ -172,7 +172,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
         intensity = algo_cfg['intensity']
         starttime = datetime.datetime.now()
         voa = VOA(virus_num, virus_dim, strong_growth_rate,
-                  common_growth_rate, s_proportion, total_virus_limit, intensity, model_cfg, X, y, args.model, args.matrix, task_type, folder, file, algo_MLconfig)
+                  common_growth_rate, s_proportion, total_virus_limit, intensity, model_cfg, X, y, args.model, args.scoring, task_type, folder, file, algo_MLconfig)
         results, ML_model, best_parameter, class_param = voa.main()
         endtime = datetime.datetime.now()
         logging.info((f"time:{endtime - starttime} "))
@@ -282,6 +282,11 @@ def model_predict(model, ML_model, best_parameter, class_param, X, y, task_type,
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=1)
         cofusion_model.fit(X_train, y_train)
-        plot_confusion_matrix(predictor, X_test, y_test)
+        predictions = cofusion_model.predict(X_test)
+        cm = confusion_matrix(y_test, predictions,
+                              labels=cofusion_model.classes_)
+        disp = ConfusionMatrixDisplay(
+            confusion_matrix=cm, display_labels=cofusion_model.classes_)
+        disp.plot()
         plt.savefig(f'{folder}/{model}_confusion_matrix')
     return predict_data

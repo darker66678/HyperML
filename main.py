@@ -9,15 +9,16 @@ import os
 
 FORMAT = '%(asctime)s %(levelname)s: %(message)s'
 logging.getLogger('matplotlib.font_manager').disabled = True
+logging.getLogger('PIL').setLevel(logging.WARNING)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", help="KNN,MLP,SVM", default="KNN")
     parser.add_argument(
         "--data", help="custom", default="custom")
-    parser.add_argument("--algo", help="PSO,VOA", default="VOA")
+    parser.add_argument("--algo", help="PSO,VOA", default="PSO")
     parser.add_argument(
-        "--matrix", help="cls: accuracy, f1, recall, precision, specificity; reg: r2, neg_mean_absolute_error, neg_mean_squared_error", default="accuracy")
+        "--scoring", help="cls: accuracy, f1, recall, precision, specificity; reg: r2, neg_mean_absolute_error, neg_mean_squared_error", default="accuracy")
     args = parser.parse_args()
 
     with open('./dataset/custom.json') as f:
@@ -36,9 +37,9 @@ if __name__ == '__main__':
         level=logging.DEBUG, filename=log_path, filemode='w', format=FORMAT)
 
     print(
-        f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, Matrix: {args.matrix}')
+        f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, scoring: {args.scoring}')
     logging.info(
-        f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, Matrix: {args.matrix}')
+        f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, scoring: {args.scoring}')
 
     print(f'data_path = {data_path}')
     logging.info(f'data_path = {data_path}')
