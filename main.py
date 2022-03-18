@@ -19,6 +19,8 @@ if __name__ == '__main__':
     parser.add_argument("--algo", help="PSO,VOA", default="PSO")
     parser.add_argument(
         "--scoring", help="cls: accuracy, f1, recall, precision, specificity; reg: r2, neg_mean_absolute_error, neg_mean_squared_error", default="accuracy")
+    parser.add_argument(
+        "--con_mat", help="Do you need to gernerate the confusion_matrix?(False or True)", default=False, type=bool)
     args = parser.parse_args()
 
     with open('./dataset/custom.json') as f:

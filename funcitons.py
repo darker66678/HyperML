@@ -114,10 +114,11 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
 
     boxpath = f'{folder}/{args.algo}_{args.model}_{file}_box.jpg'
     plot_boxplot(results, boxpath)
-    predict_data = model_predict(
-        args.model, ML_model, best_parameter, class_param, X, y, task_type, folder, param_name)
-    predict_data.to_csv(
-        f'{folder}/{args.algo}({args.model})_{file}_train_predict.csv')
+    if args.con_mat:
+        predict_data = model_predict(
+            args.model, ML_model, best_parameter, class_param, X, y, task_type, folder, param_name)
+        predict_data.to_csv(
+            f'{folder}/{args.algo}({args.model})_{file}_train_predict.csv')
     print("finished!!!")
 
 
