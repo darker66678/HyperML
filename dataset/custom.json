@@ -1,6 +1,6 @@
 {
-    "data_path": "./dataset/Breast cancer.csv",
+    "data_path": "./dataset/cancer_ori/Breast_cancer_new.csv",
     "target": "Classification",
-    "data_name": "test",
+    "data_name": "Breast",
     "type": "classification"
 }

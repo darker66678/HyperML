@@ -1,38 +1,38 @@
 {
-    "param_setting": {
-        "max_value_c": 1000,
-        "min_value_c": 1,
-        "max_value_tol": 0.8,
-        "min_value_tol": 0.00001,
-        "max_value_max_iter": 200000,
-        "min_value_max_iter": 100,
-        "max_value_gamma": 500,
-        "min_value_gamma": 0.0001,
-        "max_value_kernal": 4,
-        "min_value_kernal": 1
+    "c": {
+        "max": 1000,
+        "min": 1,
+        "int": true,
+        "class": false
     },
-    "param": [
-        "c",
-        "tol",
-        "max_iter",
-        "gamma",
-        "kernal"
-    ],
-    "int_param": [
-        0,
-        2
-    ],
-    "class_param": {
-        "class_number": [
-            4
-        ],
+    "tol": {
+        "max": 0.8,
+        "min": 0.00001,
+        "int": false,
+        "class": false
+    },
+    "max_iter": {
+        "max": 200000,
+        "min": 100,
+        "int": true,
+        "class": false
+    },
+    "gamma": {
+        "max": 500,
+        "min": 0.0001,
+        "int": false,
+        "class": false
+    },
+    "kernal": {
+        "max": 4,
+        "min": 1,
+        "int": false,
+        "class": true,
         "class_name": [
-            [
-                "linear",
-                "poly",
-                "rbf",
-                "sigmoid"
-            ]
+            "linear",
+            "poly",
+            "rbf",
+            "sigmoid"
         ]
     }
 }

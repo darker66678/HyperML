@@ -1,49 +1,47 @@
 {
-    "param_setting": {
-        "max_value_neighbors": 50,
-        "min_value_neighbors": 1,
-        "max_value_leaf_size": 300,
-        "min_value_leaf_size": 1,
-        "max_value_weights": 2,
-        "min_value_weights": 1,
-        "max_value_algorithm": 4,
-        "min_value_algorithm": 1,
-        "max_value_metric": 3,
-        "min_value_metric": 1
+    "neighbors": {
+        "max": 50,
+        "min": 10,
+        "int": true,
+        "class": false
     },
-    "param": [
-        "neighbors",
-        "leaf_size",
-        "weights",
-        "algorithm",
-        "metric"
-    ],
-    "int_param": [
-        0,
-        1
-    ],
-    "class_param": {
-        "class_number": [
-            2,
-            3,
-            4
-        ],
+    "leaf_size": {
+        "max": 300,
+        "min": 1,
+        "int": true,
+        "class": false
+    },
+    "weights": {
+        "max": 2,
+        "min": 1,
+        "int": false,
+        "class": true,
         "class_name": [
-            [
-                "uniform",
-                "distance"
-            ],
-            [
-                "ball_tree",
-                "kd_tree",
-                "brute",
-                "auto"
-            ],
-            [
-                "euclidean",
-                "manhattan",
-                "chebyshev"
-            ]
+            "uniform",
+            "distance"
+        ]
+    },
+    "algorithm": {
+        "max": 4,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "ball_tree",
+            "kd_tree",
+            "brute",
+            "auto"
+        ]
+    },
+    "metric": {
+        "max": 3,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "euclidean",
+            "manhattan",
+            "chebyshev"
         ]
     }
 }

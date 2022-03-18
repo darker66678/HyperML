@@ -9,99 +9,29 @@ from PSO import PSO
 from VOA import VOA
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.svm import SVC, SVR
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, AdaBoostClassifier, AdaBoostRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-
-
-def load_KNN_cfg(model_cfg):
-    KNN_cfg = {
-        "max_value_neighbors": model_cfg['param_setting']['max_value_neighbors'],
-        "min_value_neighbors": model_cfg['param_setting']['min_value_neighbors'],
-        "max_value_leaf_size": model_cfg['param_setting']['max_value_leaf_size'],
-        "min_value_leaf_size": model_cfg['param_setting']['min_value_leaf_size'],
-        "max_value_weights": model_cfg['param_setting']['max_value_weights'],
-        "min_value_weights": model_cfg['param_setting']['min_value_weights'],
-        "max_value_algorithm": model_cfg['param_setting']['max_value_algorithm'],
-        "min_value_algorithm": model_cfg['param_setting']['min_value_algorithm'],
-        "max_value_metric": model_cfg['param_setting']['max_value_metric'],
-        "min_value_metric": model_cfg['param_setting']['min_value_metric'],
-        "int_parameter": model_cfg['int_param'],
-        "class_parameter": model_cfg['class_param'],
-        "param": model_cfg['param']
-    }
-    return KNN_cfg
-
-
-def load_MLP_cfg(model_cfg):
-    MLP_cfg = {
-        "max_value_hidden_layer_1": model_cfg['param_setting']['max_value_hidden_layer_1'],
-        "min_value_hidden_layer_1": model_cfg['param_setting']['min_value_hidden_layer_1'],
-        "max_value_hidden_layer_2": model_cfg['param_setting']['max_value_hidden_layer_2'],
-        "min_value_hidden_layer_2": model_cfg['param_setting']['min_value_hidden_layer_2'],
-        "max_value_alpha": model_cfg['param_setting']['max_value_alpha'],
-        "min_value_alpha": model_cfg['param_setting']['min_value_alpha'],
-        "max_value_learning_rate_init": model_cfg['param_setting']['max_value_learning_rate_init'],
-        "min_value_learning_rate_init": model_cfg['param_setting']['min_value_learning_rate_init'],
-        "max_value_max_iter": model_cfg['param_setting']['max_value_max_iter'],
-        "min_value_max_iter": model_cfg['param_setting']['min_value_max_iter'],
-        "max_value_tol": model_cfg['param_setting']['max_value_tol'],
-        "min_value_tol": model_cfg['param_setting']['min_value_tol'],
-        "max_value_beta_1": model_cfg['param_setting']['max_value_beta_1'],
-        "min_value_beta_1": model_cfg['param_setting']['min_value_beta_1'],
-        "max_value_beta_2": model_cfg['param_setting']['max_value_beta_2'],
-        "min_value_beta_2": model_cfg['param_setting']['min_value_beta_2'],
-        "max_value_n_iter_no_change": model_cfg['param_setting']['max_value_n_iter_no_change'],
-        "min_value_n_iter_no_change": model_cfg['param_setting']['min_value_n_iter_no_change'],
-        "max_value_activation": model_cfg['param_setting']['max_value_activation'],
-        "min_value_activation": model_cfg['param_setting']['min_value_activation'],
-        "max_value_solver": model_cfg['param_setting']['max_value_solver'],
-        "min_value_solver": model_cfg['param_setting']['min_value_solver'],
-        "max_value_learning_rate": model_cfg['param_setting']['max_value_learning_rate'],
-        "min_value_learning_rate": model_cfg['param_setting']['min_value_learning_rate'],
-        "int_parameter": model_cfg['int_param'],
-        "class_parameter": model_cfg['class_param'],
-        "param": model_cfg['param']
-    }
-    return MLP_cfg
-
-
-def load_SVM_cfg(model_cfg):
-    SVM_cfg = {
-        "max_value_c": model_cfg['param_setting']['max_value_c'],
-        "min_value_c": model_cfg['param_setting']['min_value_c'],
-        "max_value_tol": model_cfg['param_setting']['max_value_tol'],
-        "min_value_tol": model_cfg['param_setting']['min_value_tol'],
-        "max_value_max_iter": model_cfg['param_setting']['max_value_max_iter'],
-        "min_value_max_iter": model_cfg['param_setting']['min_value_max_iter'],
-        "max_value_gamma": model_cfg['param_setting']['max_value_gamma'],
-        "min_value_gamma": model_cfg['param_setting']['min_value_gamma'],
-        "max_value_kernal": model_cfg['param_setting']['max_value_kernal'],
-        "min_value_kernal": model_cfg['param_setting']['min_value_kernal'],
-        "int_parameter": model_cfg['int_param'],
-        "class_parameter": model_cfg['class_param'],
-        "param": model_cfg['param']
-    }
-    return SVM_cfg
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 
 def load_ML_model_cfg(args):
     if(args.model == "KNN"):
-        with open('./cfg/ml_model/KNN_config.json') as f:
-            model_cfg_json = json.load(f)
-        model_cfg = load_KNN_cfg(model_cfg_json)
-
+        link = './cfg/ml_model/KNN_config.json'
     elif(args.model == "MLP"):
-        with open('./cfg/ml_model/MLP_config.json') as f:
-            model_cfg_json = json.load(f)
-        model_cfg = load_MLP_cfg(model_cfg_json)
-
+        link = './cfg/ml_model/MLP_config.json'
     elif(args.model == "SVM"):
-        with open('./cfg/ml_model/SVM_config.json') as f:
-            model_cfg_json = json.load(f)
-        model_cfg = load_SVM_cfg(model_cfg_json)
-    return model_cfg, model_cfg_json
+        link = './cfg/ml_model/SVM_config.json'
+    elif(args.model == "RF"):
+        link = './cfg/ml_model/RF_config.json'
+    elif(args.model == "ADA"):
+        link = './cfg/ml_model/ADA_config.json'
+    with open(link) as f:
+        model_cfg = json.load(f)
+
+    return model_cfg
 
 
 def load_data(data, cfg):
@@ -139,7 +69,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
             print(f'PSO parameters: {algo_cfg}')
             logging.info(f'PSO config: {algo_cfg}')
         particle_num = algo_cfg['particle_num']
-        particle_dim = int((len(model_cfg)-3)/2)
+        particle_dim = len(model_cfg)
         iter_num = algo_cfg['iter_num']
         c1 = algo_cfg['c1']
         c2 = algo_cfg['c2']
@@ -148,7 +78,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
         starttime = datetime.datetime.now()
         pso = PSO(particle_num, particle_dim, iter_num, c1,
                   c2, w, model_cfg, X, y, file, args.model, folder, args.scoring, task_type, algo_MLconfig)
-        results, ML_model, best_parameter, class_param = pso.main()
+        results, ML_model, best_parameter, class_param, param_name = pso.main()
         endtime = datetime.datetime.now()
         logging.info(f"time: {endtime - starttime}")
         logging.info("-----------------------\n\n")
@@ -164,7 +94,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
             logging.info(f'VOA config: {algo_cfg}')
 
         virus_num = algo_cfg['virus_num']
-        virus_dim = int((len(model_cfg)-3)/2)
+        virus_dim = len(model_cfg)
         s_proportion = algo_cfg['s_proportion']
         strong_growth_rate = algo_cfg['strong_growth_rate']
         common_growth_rate = algo_cfg['common_growth_rate']
@@ -173,7 +103,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
         starttime = datetime.datetime.now()
         voa = VOA(virus_num, virus_dim, strong_growth_rate,
                   common_growth_rate, s_proportion, total_virus_limit, intensity, model_cfg, X, y, args.model, args.scoring, task_type, folder, file, algo_MLconfig)
-        results, ML_model, best_parameter, class_param = voa.main()
+        results, ML_model, best_parameter, class_param, param_name = voa.main()
         endtime = datetime.datetime.now()
         logging.info((f"time:{endtime - starttime} "))
         logging.info("-----------------------\n\n")
@@ -185,7 +115,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
     boxpath = f'{folder}/{args.algo}_{args.model}_{file}_box.jpg'
     plot_boxplot(results, boxpath)
     predict_data = model_predict(
-        args.model, ML_model, best_parameter, class_param, X, y, task_type, folder)
+        args.model, ML_model, best_parameter, class_param, X, y, task_type, folder, param_name)
     predict_data.to_csv(
         f'{folder}/{args.algo}({args.model})_{file}_train_predict.csv')
     print("finished!!!")
@@ -193,72 +123,116 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
 
 def algo_MLconfig(model, task_type, model_cfg):
     if(model == "KNN"):
-        neighbors = [model_cfg["max_value_neighbors"],
-                     model_cfg["min_value_neighbors"]]
-        leaf_size = [model_cfg["max_value_leaf_size"],
-                     model_cfg["min_value_leaf_size"]]
-        weights = [model_cfg["max_value_weights"],
-                   model_cfg["min_value_weights"]]
-        algorithm = [model_cfg["max_value_algorithm"],
-                     model_cfg["min_value_algorithm"]]
-        metric = [model_cfg["max_value_metric"],
-                  model_cfg["min_value_metric"]]
+        neighbors = [model_cfg["neighbors"]["max"],
+                     model_cfg["neighbors"]["min"]]
+        leaf_size = [model_cfg["leaf_size"]["max"],
+                     model_cfg["leaf_size"]["min"]]
+        weights = [model_cfg["weights"]["max"],
+                   model_cfg["weights"]["min"]]
+        algorithm = [model_cfg["algorithm"]["max"],
+                     model_cfg["algorithm"]["min"]]
+        metric = [model_cfg["metric"]["max"],
+                  model_cfg["metric"]["min"]]
         max_min = [neighbors, leaf_size, weights, algorithm, metric]
         if task_type == "classification":
             ML_model = KNeighborsClassifier
         elif task_type == "regression":
             ML_model = KNeighborsRegressor
     elif(model == "MLP"):
-        hidden_layer = [
-            model_cfg['max_value_hidden_layer_1'], model_cfg['min_value_hidden_layer_1']]
-        hidden_layer_2 = [
-            model_cfg['max_value_hidden_layer_2'], model_cfg['min_value_hidden_layer_2']]
-        alpha = [model_cfg['max_value_alpha'],
-                 model_cfg['min_value_alpha']]
+        hidden_layer_1 = [model_cfg['hidden_layer_1']
+                          ['max'], model_cfg['hidden_layer_1']['min']]
+        hidden_layer_2 = [model_cfg['hidden_layer_2']
+                          ['max'], model_cfg['hidden_layer_2']['min']]
+        alpha = [model_cfg['alpha']["max"],
+                 model_cfg['alpha']["min"]]
         learning_rate_init = [
-            model_cfg['max_value_learning_rate_init'], model_cfg['min_value_learning_rate_init']]
-        max_iter = [model_cfg['max_value_max_iter'],
-                    model_cfg['min_value_max_iter']]
-        tol = [model_cfg['max_value_tol'], model_cfg['min_value_tol']]
-        beta = [model_cfg['max_value_beta_1'], model_cfg['min_value_beta_1']]
-        beta_2 = [model_cfg['max_value_beta_2'], model_cfg['min_value_beta_2']]
+            model_cfg['learning_rate_init']['max'], model_cfg['learning_rate_init']["min"]]
+        max_iter = [model_cfg['max_iter']["max"],
+                    model_cfg['max_iter']["min"]]
+        tol = [model_cfg['tol']["max"], model_cfg['tol']["min"]]
+        beta_1 = [model_cfg['beta_1']["max"], model_cfg['beta_1']["min"]]
+        beta_2 = [model_cfg['beta_2']["max"], model_cfg['beta_2']["min"]]
         n_iter_no_change = [
-            model_cfg['max_value_n_iter_no_change'], model_cfg['min_value_n_iter_no_change']]
-        activation = [model_cfg['max_value_activation'],
-                      model_cfg['min_value_activation']]
-        solver = [model_cfg['max_value_solver'],
-                  model_cfg['min_value_solver']]
+            model_cfg['n_iter_no_change']["max"], model_cfg['n_iter_no_change']["min"]]
+        activation = [model_cfg['activation']["max"],
+                      model_cfg['activation']["min"]]
+        solver = [model_cfg['solver']["max"],
+                  model_cfg['solver']["min"]]
         learning_rate = [
-            model_cfg['max_value_learning_rate'], model_cfg['min_value_learning_rate']]
+            model_cfg['learning_rate']["max"], model_cfg['learning_rate']["min"]]
 
-        max_min = [hidden_layer, hidden_layer_2, alpha, learning_rate_init, max_iter,
-                   tol, beta, beta_2, n_iter_no_change, activation, solver, learning_rate]
+        max_min = [hidden_layer_1, hidden_layer_2, alpha, learning_rate_init, max_iter,
+                   tol, beta_1, beta_2, n_iter_no_change, activation, solver, learning_rate]
         if task_type == "classification":
             ML_model = MLPClassifier
         elif task_type == "regression":
             ML_model = MLPRegressor
 
     elif(model == "SVM"):
-        c = [model_cfg['max_value_c'], model_cfg['min_value_c']]
-        tol = [model_cfg['max_value_tol'], model_cfg['min_value_tol']]
-        max_iter = [model_cfg['max_value_max_iter'],
-                    model_cfg['min_value_max_iter']]
-        gamma = [model_cfg['max_value_gamma'],
-                 model_cfg['min_value_gamma']]
-        kernal = [model_cfg['max_value_kernal'],
-                  model_cfg['min_value_kernal']]
+        c = [model_cfg['c']["max"], model_cfg['c']["min"]]
+        tol = [model_cfg['tol']["max"], model_cfg['tol']["min"]]
+        max_iter = [model_cfg['max_iter']["max"],
+                    model_cfg['max_iter']["min"]]
+        gamma = [model_cfg['gamma']["max"],
+                 model_cfg['gamma']["min"]]
+        kernal = [model_cfg['kernal']["max"],
+                  model_cfg['kernal']["min"]]
         max_min = [c, tol, max_iter, gamma, kernal]
         if task_type == "classification":
             ML_model = SVC
         elif task_type == "regression":
             ML_model = SVR
+
+    elif(model == "RF"):
+        n_estimators = [model_cfg['n_estimators']
+                        ["max"], model_cfg['n_estimators']["min"]]
+        criterion = [model_cfg['criterion']["max"],
+                     model_cfg['criterion']["min"]]
+        max_depth = [model_cfg['max_depth']["max"],
+                     model_cfg['max_depth']["min"]]
+        min_samples_split = [model_cfg['min_samples_split']["max"],
+                             model_cfg['min_samples_split']["min"]]
+        min_samples_leaf = [model_cfg['min_samples_leaf']["max"],
+                            model_cfg['min_samples_leaf']["min"]]
+        max_features = [model_cfg['max_features']["max"],
+                        model_cfg['max_features']["min"]]
+        max_min = [n_estimators, criterion, max_depth,
+                   min_samples_split, min_samples_leaf, max_features]
+        if task_type == "classification":
+            ML_model = RandomForestClassifier
+        elif task_type == "regression":
+            ML_model = RandomForestRegressor
+
+    elif(model == "ADA"):
+        n_estimators = [model_cfg['n_estimators']
+                        ["max"], model_cfg['n_estimators']["min"]]
+        learning_rate = [model_cfg['learning_rate']["max"],
+                         model_cfg['learning_rate']["min"]]
+        algorithm = [model_cfg['algorithm']["max"],
+                     model_cfg['algorithm']["min"]]
+        criterion = [model_cfg['criterion']["max"],
+                     model_cfg['criterion']["min"]]
+        max_depth = [model_cfg['max_depth']["max"],
+                     model_cfg['max_depth']["min"]]
+        min_samples_split = [model_cfg['min_samples_split']["max"],
+                             model_cfg['min_samples_split']["min"]]
+        min_samples_leaf = [model_cfg['min_samples_leaf']["max"],
+                            model_cfg['min_samples_leaf']["min"]]
+        max_features = [model_cfg['max_features']["max"],
+                        model_cfg['max_features']["min"]]
+        max_min = [n_estimators, learning_rate, algorithm, criterion, max_depth,
+                   min_samples_split, min_samples_leaf, max_features]
+        if task_type == "classification":
+            ML_model = [AdaBoostClassifier, DecisionTreeClassifier]
+        elif task_type == "regression":
+            ML_model = [AdaBoostRegressor, DecisionTreeRegressor]
     return max_min, ML_model
 
 
-def model_predict(model, ML_model, best_parameter, class_param, X, y, task_type, folder):
-    for index, class_num in enumerate(class_param['class_number']):
+def model_predict(model, ML_model, best_parameter, class_param, X, y, task_type, folder, param_name):
+    for index, class_num in enumerate(class_param):
         count = 1
-        for class_name in class_param['class_name'][index]:
+        for class_name in param_name[class_num]:
             if(count-1 < best_parameter[class_num] <= count):
                 best_parameter[class_num] = class_name
                 break
@@ -273,6 +247,13 @@ def model_predict(model, ML_model, best_parameter, class_param, X, y, task_type,
     elif(model == "SVM"):
         predictor = ML_model(C=best_parameter[0], tol=best_parameter[1], max_iter=best_parameter[2],
                              gamma=best_parameter[3], cache_size=1000, kernel=best_parameter[4])
+    elif(model == "RF"):
+        predictor = ML_model(n_estimators=best_parameter[0],
+                             max_depth=best_parameter[2], min_samples_split=best_parameter[3], min_samples_leaf=best_parameter[4], criterion=best_parameter[1], max_features=best_parameter[5], n_jobs=-1,)
+    elif(model == "ADA"):
+        predictor = ML_model[0](n_estimators=best_parameter[0], learning_rate=best_parameter[1], algorithm=best_parameter[2], base_estimator=ML_model[1](
+            criterion=best_parameter[3], max_depth=best_parameter[4], min_samples_split=best_parameter[5], min_samples_leaf=best_parameter[6], max_features=best_parameter[7]))
+
     cofusion_model = predictor
     predictor.fit(X, y)
     pre = predictor.predict(X)

@@ -9,10 +9,14 @@ Optimizing ML hyperparameter problem using heuristic algorithm
 * [SVM](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)
 * [MLP](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html)
 * [KNN](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html)
+* [Random Forest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+* [Adaboost](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.AdaBoostClassifier.html)
 #### Regression
 * [SVM](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
 * [MLP](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html)
 * [KNN](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html)
+* [Random Forest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html)
+* [Adaboost](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.AdaBoostRegressor.html?highlight=adaboostre#sklearn.ensemble.AdaBoostRegressor)
 ### Scoring
 [All the scores](https://scikit-learn.org/stable/modules/model_evaluation.html)
 ## How to start

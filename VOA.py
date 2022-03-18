@@ -2,9 +2,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import random
-from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-from sklearn.svm import SVC, SVR
-from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.model_selection import cross_validate
 from sklearn.utils import parallel_backend
 import logging
@@ -23,9 +20,19 @@ class VOA(object):
         self.common_growth_rate = common_growth_rate
         self.total_virus_limit = total_virus_limit
         self.intensity = intensity
-        self.int_parameter = model_cfg['int_parameter']
-        self.class_parm = model_cfg['class_parameter']
-        self.param_name = model_cfg['param']
+
+        self.int_param = []
+        self.class_param = []
+        self.param_name = []
+        for index, i in enumerate(model_cfg.keys()):
+            if model_cfg[i]['int']:
+                self.int_param.append(index)
+            if model_cfg[i]['class']:
+                self.class_param.append(index)
+                self.param_name.append(model_cfg[i]["class_name"])
+            else:
+                self.param_name.append([])
+        self.keys = model_cfg.keys()
         self.count = self.virus_num-1
         self.X = X
         self.y = y
@@ -48,7 +55,7 @@ class VOA(object):
         for i in range(self.virus_num):
             for j in range(self.virus_dim):
                 random_number = random.random()
-                if j in self.int_parameter:  # int limit
+                if j in self.int_param:  # int limit
                     current_parameter[i][j] = int(
                         random_number * (self.max_min[j][0] - self.max_min[j][1]) + self.max_min[j][1])
                 else:
@@ -71,9 +78,9 @@ class VOA(object):
                 return current_parameter, params, train, test, record
             elif current_parameter[i][self.virus_dim] == 0:
                 class_particle = []
-                for index, class_num in enumerate(self.class_parm['class_number']):
+                for index, class_num in enumerate(self.class_param):
                     count = 1
-                    for class_name in self.class_parm['class_name'][index]:
+                    for class_name in self.param_name[class_num]:
                         if(count-1 < current_parameter[i][class_num] <= count):
                             class_particle.append(class_name)
                             break
@@ -89,6 +96,24 @@ class VOA(object):
                     if(record == True):
                         params.append([current_parameter[i][0], current_parameter[i][1], class_particle[0],
                                        class_particle[1], class_particle[2]]+current_parameter[i][self.virus_dim+2:])  # record
+                elif(self.model == "ADA"):
+                    with parallel_backend('threading'):
+                        ada = self.ML_model[0](n_estimators=current_parameter[i][0], learning_rate=current_parameter[i][1], algorithm=class_particle[0], base_estimator=self.ML_model[1](
+                            criterion=class_particle[1], max_depth=current_parameter[i][4], min_samples_split=current_parameter[i][5], min_samples_leaf=current_parameter[i][6], max_features=class_particle[2]))
+                        cv_scores = cross_validate(
+                            ada, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                        params.append([current_parameter[i][0], current_parameter[i][1], class_particle[0],
+                                       class_particle[1], current_parameter[i][4], current_parameter[i][5], current_parameter[i][6], class_particle[2]])
+                elif(self.model == "RF"):
+                    with parallel_backend('threading'):
+                        rf = self.ML_model(n_estimators=current_parameter[i][0], criterion=class_particle[0],
+                                           max_depth=current_parameter[i][2], min_samples_split=current_parameter[
+                                               i][3], min_samples_leaf=current_parameter[i][4],
+                                           max_features=class_particle[1], n_jobs=-1)
+                        cv_scores = cross_validate(
+                            rf, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                        params.append([current_parameter[i][0], class_particle[0], current_parameter[i]
+                                       [2], current_parameter[i][3], current_parameter[i][4], class_particle[1]])
 
                 elif(self.model == "MLP"):
                     with parallel_backend('threading'):
@@ -207,7 +232,7 @@ class VOA(object):
                                 m = self.max_min[j][0]
                             elif (m < self.max_min[j][1]):
                                 m = self.max_min[j][1]
-                        if j in self.int_parameter:
+                        if j in self.int_param:
                             tmp.append(int(m))
                         else:
                             tmp.append(m)
@@ -255,7 +280,7 @@ class VOA(object):
                                 m = self.max_min[j][0]
                             elif (m < self.max_min[j][1]):
                                 m = self.max_min[j][1]
-                        if j in self.int_parameter:
+                        if j in self.int_param:
                             tmp.append(int(m))
                         else:
                             tmp.append(m)
@@ -359,9 +384,9 @@ virus_count_before_killing: {len(current_parameter)+strong_kill_amount+common_ki
         params_number = [i for i in range(self.virus_dim)]
 
         data_params = pd.DataFrame(params)[params_number]
-        data_params.columns = self.param_name
+        data_params.columns = self.keys
         updata_history = pd.DataFrame(params).drop(params_number, axis=1)
         results = pd.concat(
             [pd.DataFrame(train, columns=["train"]), pd.DataFrame(test, columns=["test"]), data_params, updata_history], axis=1)
 
-        return results, self.ML_model, best_parameter, self.class_parm
+        return results, self.ML_model, best_parameter, self.class_param, self.param_name

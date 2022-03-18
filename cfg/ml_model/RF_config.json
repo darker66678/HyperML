@@ -1,0 +1,47 @@
+{
+    "n_estimators": {
+        "max": 2000,
+        "min": 50,
+        "int": true,
+        "class": false
+    },
+    "criterion": {
+        "max": 2,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "gini",
+            "entropy"
+        ]
+    },
+    "max_depth": {
+        "max": 1000,
+        "min": 10,
+        "int": true,
+        "class": false
+    },
+    "min_samples_split": {
+        "max": 50,
+        "min": 2,
+        "int": true,
+        "class": false
+    },
+    "min_samples_leaf": {
+        "max": 0.5,
+        "min": 0.0001,
+        "int": false,
+        "class": false
+    },
+    "max_features": {
+        "max": 3,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "auto",
+            "sqrt",
+            "log2"
+        ]
+    }
+}

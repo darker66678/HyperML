@@ -13,10 +13,10 @@ logging.getLogger('PIL').setLevel(logging.WARNING)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", help="KNN,MLP,SVM", default="KNN")
+    parser.add_argument("--model", help="KNN,MLP,SVM,RF,ADA", default="ADA")
     parser.add_argument(
         "--data", help="custom", default="custom")
-    parser.add_argument("--algo", help="PSO,VOA", default="VOA")
+    parser.add_argument("--algo", help="PSO,VOA", default="PSO")
     parser.add_argument(
         "--scoring", help="cls: accuracy, f1, recall, precision, specificity; reg: r2, neg_mean_absolute_error, neg_mean_squared_error", default="accuracy")
     args = parser.parse_args()
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     dataset, task_type, y, X, file, target, data_path = load_data(
         args.data, custom_data)
 
-    model_cfg, model_cfg_json = load_ML_model_cfg(args)
+    model_cfg = load_ML_model_cfg(args)
 
     rightnow = str(datetime.datetime.today()).replace(
         " ", "_").replace(":", "-")[:-7]
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     logging.info(
         f'data:{len(dataset)}, y={target} , X_num = {len(X.columns)}')
 
-    print(f'{args.model} config: {model_cfg_json}')
-    logging.info(f'{args.model} config: {model_cfg_json}')
+    print(f'{args.model} config: {model_cfg}')
+    logging.info(f'{args.model} config: {model_cfg}')
 
     hyper(args, model_cfg, X, y, file, folder, task_type)
