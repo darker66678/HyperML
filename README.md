@@ -1,5 +1,7 @@
 # HyperML
 Optimizing ML hyperparameter problem using heuristic algorithm
+## Updated log
+* [Updated log](https://www.dropbox.com/scl/fi/t5tsct6cx9jk9uxznried/HyperML-log.paper?dl=0&rlkey=7qjrdksm1fwmz3ll8ted591za)
 ## Support algorithms
 ### Heuristic
 * PSO
