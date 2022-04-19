@@ -92,7 +92,7 @@ class VOA(object):
                             n_neighbors=current_parameter[i][0], weights=class_particle[0], algorithm=class_particle[1], leaf_size=current_parameter[i][1], metric=class_particle[2], n_jobs=-1)
                         cv_scores = cross_validate(
                             knn, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
-                    print(i, cv_scores['test_score'].mean())
+                    print(len(params), cv_scores['test_score'].mean())
                     if(record == True):
                         params.append([current_parameter[i][0], current_parameter[i][1], class_particle[0],
                                        class_particle[1], class_particle[2]]+current_parameter[i][self.virus_dim+2:])  # record
@@ -102,6 +102,8 @@ class VOA(object):
                             criterion=class_particle[1], max_depth=current_parameter[i][4], min_samples_split=current_parameter[i][5], min_samples_leaf=current_parameter[i][6], max_features=class_particle[2]))
                         cv_scores = cross_validate(
                             ada, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                    print(len(params), cv_scores['test_score'].mean())
+                    if(record == True):
                         params.append([current_parameter[i][0], current_parameter[i][1], class_particle[0],
                                        class_particle[1], current_parameter[i][4], current_parameter[i][5], current_parameter[i][6], class_particle[2]])
                 elif(self.model == "RF"):
@@ -112,6 +114,8 @@ class VOA(object):
                                            max_features=class_particle[1], n_jobs=-1)
                         cv_scores = cross_validate(
                             rf, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                    print(len(params), cv_scores['test_score'].mean())
+                    if(record == True):
                         params.append([current_parameter[i][0], class_particle[0], current_parameter[i]
                                        [2], current_parameter[i][3], current_parameter[i][4], class_particle[1]])
 
@@ -308,8 +312,8 @@ class VOA(object):
         for j in range(common_kill_amount):
             kill = random.sample(
                 range(count_strong_virus, count_strong_virus+count_common_virus-j), 1)
-            logging.debug(
-                f"killed common virus:{current_parameter[kill[0]][-1]}")
+            # logging.debug(
+            #   f"killed common virus:{current_parameter[kill[0]][-1]}")
             del current_parameter[kill[0]]
         # kill strong virus
         for j in range(strong_kill_amount):
