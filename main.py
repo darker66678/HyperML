@@ -8,8 +8,8 @@ import os
 
 
 FORMAT = '%(asctime)s %(levelname)s: %(message)s'
-logging.getLogger('matplotlib.font_manager').disabled = True
-logging.getLogger('PIL').setLevel(logging.WARNING)
+for _ in logging.root.manager.loggerDict:
+    logging.getLogger(_).setLevel(logging.CRITICAL)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

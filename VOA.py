@@ -319,7 +319,7 @@ class VOA(object):
         for j in range(strong_kill_amount):
             kill = random.sample(
                 range(0, count_strong_virus-j-1), 1)
-            logging.debug(
+            logging.info(
                 f"killed strong virus:{current_parameter[kill[0]][-1]}")
             del current_parameter[kill[0]]
         # label survived virus

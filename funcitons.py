@@ -15,6 +15,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+import sklearn.metrics
 
 
 def load_ML_model_cfg(args):
@@ -114,11 +115,12 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
 
     boxpath = f'{folder}/{args.algo}_{args.model}_{file}_box.jpg'
     plot_boxplot(results, boxpath)
-    if args.confusion_m:
-        predict_data = model_predict(
-            args.model, ML_model, best_parameter, class_param, X, y, task_type, folder, param_name)
-        predict_data.to_csv(
-            f'{folder}/{args.algo}({args.model})_{file}_train_predict.csv')
+    cv_pred_data = model_predict(ML_model, best_parameter, class_param,
+                                 X, y, task_type, folder, param_name, args)
+    cv_pred_data.to_csv(
+        f'{folder}/{args.algo}({args.model})_{file}_cv_predict.csv')
+
+    logging.info("finished!!!")
     print("finished!!!")
 
 
@@ -230,45 +232,92 @@ def algo_MLconfig(model, task_type, model_cfg):
     return max_min, ML_model
 
 
-def model_predict(model, ML_model, best_parameter, class_param, X, y, task_type, folder, param_name):
+def model_predict(ML_model, parameter, class_param, X, y, task_type, folder, param_name, args):
     for index, class_num in enumerate(class_param):
         count = 1
         for class_name in param_name[class_num]:
-            if(count-1 < best_parameter[class_num] <= count):
-                best_parameter[class_num] = class_name
+            if(count-1 < parameter[class_num] <= count):
+                parameter[class_num] = class_name
                 break
             else:
                 count += 1
+    model = args.model
     if(model == "KNN"):
-        predictor = ML_model(n_neighbors=best_parameter[0], leaf_size=best_parameter[1], metric=best_parameter[4],  weights=best_parameter[2],
-                             algorithm=best_parameter[3], n_jobs=-1)
+        predictor = ML_model(n_neighbors=parameter[0], leaf_size=parameter[1], metric=parameter[4],  weights=parameter[2],
+                             algorithm=parameter[3], n_jobs=-1)
     elif(model == "MLP"):
-        predictor = ML_model(hidden_layer_sizes=[best_parameter[0], best_parameter[1]],  alpha=best_parameter[2], learning_rate_init=best_parameter[3], max_iter=best_parameter[4], tol=best_parameter[5],
-                             beta_1=best_parameter[6], beta_2=best_parameter[7], n_iter_no_change=best_parameter[8], activation=best_parameter[9], solver=best_parameter[10], learning_rate=best_parameter[11])
+        predictor = ML_model(hidden_layer_sizes=[parameter[0], parameter[1]],  alpha=parameter[2], learning_rate_init=parameter[3], max_iter=parameter[4], tol=parameter[5],
+                             beta_1=parameter[6], beta_2=parameter[7], n_iter_no_change=parameter[8], activation=parameter[9], solver=parameter[10], learning_rate=parameter[11])
     elif(model == "SVM"):
-        predictor = ML_model(C=best_parameter[0], tol=best_parameter[1], max_iter=best_parameter[2],
-                             gamma=best_parameter[3], cache_size=1000, kernel=best_parameter[4])
+        predictor = ML_model(C=parameter[0], tol=parameter[1], max_iter=parameter[2],
+                             gamma=parameter[3], cache_size=1000, kernel=parameter[4])
     elif(model == "RF"):
-        predictor = ML_model(n_estimators=best_parameter[0],
-                             max_depth=best_parameter[2], min_samples_split=best_parameter[3], min_samples_leaf=best_parameter[4], criterion=best_parameter[1], max_features=best_parameter[5], n_jobs=-1,)
+        predictor = ML_model(n_estimators=parameter[0],
+                             max_depth=parameter[2], min_samples_split=parameter[3], min_samples_leaf=parameter[4], criterion=parameter[1], max_features=parameter[5], n_jobs=-1,)
     elif(model == "ADA"):
-        predictor = ML_model[0](n_estimators=best_parameter[0], learning_rate=best_parameter[1], algorithm=best_parameter[2], base_estimator=ML_model[1](
-            criterion=best_parameter[3], max_depth=best_parameter[4], min_samples_split=best_parameter[5], min_samples_leaf=best_parameter[6], max_features=best_parameter[7]))
+        predictor = ML_model[0](n_estimators=parameter[0], learning_rate=parameter[1], algorithm=parameter[2], base_estimator=ML_model[1](
+            criterion=parameter[3], max_depth=parameter[4], min_samples_split=parameter[5], min_samples_leaf=parameter[6], max_features=parameter[7]))
 
-    cofusion_model = predictor
-    predictor.fit(X, y)
-    pre = predictor.predict(X)
-    predict_data = pd.concat(
-        [X, pd.DataFrame(y),  pd.DataFrame(pre, columns=['predict'])], axis=1)
-    if task_type == 'classification':
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=1)
-        cofusion_model.fit(X_train, y_train)
-        predictions = cofusion_model.predict(X_test)
-        cm = confusion_matrix(y_test, predictions,
-                              labels=cofusion_model.classes_)
-        disp = ConfusionMatrixDisplay(
-            confusion_matrix=cm, display_labels=cofusion_model.classes_)
-        disp.plot()
-        plt.savefig(f'{folder}/{model}_confusion_matrix')
-    return predict_data
+    cv_pred, all_label = cross_validation(X, y, args, predictor)
+    cv_pred_data = pd.concat([X, pd.DataFrame(y),  cv_pred], axis=1)
+    eval_metrics(task_type, y, cv_pred)
+    if args.confusion_m:
+        if task_type == "classification":
+            cm = confusion_matrix(
+                y, cv_pred, labels=all_label)
+            disp = ConfusionMatrixDisplay(
+                confusion_matrix=cm, display_labels=all_label)
+            disp.plot()
+            plt.savefig(f'{folder}/{model}_confusion_matrix')
+            logging.info("Save confusio matrix!")
+        else:
+            logging.debug("Regression can't plot confusio matrix!")
+    return cv_pred_data
+
+
+def cross_validation(X, y, args, init_predictor):
+    k_fold = args.k_fold
+    unit = int(len(X)/k_fold)
+    total_pred = pd.DataFrame()
+    for i in range(k_fold):
+        predictor = init_predictor
+        if i == k_fold-1:
+            train_x = X.drop(range(unit*i, len(X)))
+            train_y = y.drop(range(unit*i, len(X)))
+            test_x = X.iloc[unit*i:len(X), :]
+        else:
+            train_x = X.drop(range(unit*i, unit*(i+1)))
+            train_y = y.drop(range(unit*i, unit*(i+1)))
+            test_x = X.iloc[unit*i:unit*(i+1), :]
+
+        predictor.fit(train_x, train_y)
+        pred = pd.Series(predictor.predict(test_x))
+        total_pred = pd.concat([total_pred, pred], axis=0)
+    total_pred.columns = ['cv_predict']
+    total_pred = total_pred.reset_index(drop=True)
+    return total_pred, predictor.classes_
+
+
+def eval_metrics(task_type, y, cv_pred):
+    if task_type == "regression":
+        r2 = sklearn.metrics.r2_score(y, cv_pred)
+        mse = sklearn.metrics.mean_squared_error(y, cv_pred)
+        mae = sklearn.metrics.mean_absolute_error(y, cv_pred)
+        logging.info("------ Cross validation metrics of Best model ------")
+        logging.info(f'R2:{r2}')
+        logging.info(f'MSE:{mse}')
+        logging.info(f'MAE:{mae}')
+
+    elif task_type == "classification":
+        accuracy = sklearn.metrics.accuracy_score(y, cv_pred)
+        f1 = sklearn.metrics.f1_score(y, cv_pred)
+        recall = sklearn.metrics.recall_score(y, cv_pred, pos_label=1)
+        precision = sklearn.metrics.precision_score(y, cv_pred)
+        specificity = sklearn.metrics.recall_score(y, cv_pred, pos_label=0)
+        logging.info("------ Cross validation metrics of Best model ------")
+        logging.info(f'Accuracy:{accuracy}')
+        logging.info(f'F1 Score:{f1}')
+        logging.info(f'Precision:{precision}')
+        logging.info(f'Recall:{recall}')
+        logging.info(f'Specificity:{specificity}')
+    logging.info("---------------------------------------------------")
