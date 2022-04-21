@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 import sklearn.metrics
+from sklearn.utils import shuffle
 
 
 def load_ML_model_cfg(args):
@@ -37,10 +38,11 @@ def load_ML_model_cfg(args):
 
 def load_data(data, cfg):
     data = pd.read_csv(cfg['data_path'])
-    dataset = [data]
+    shuffle_data = shuffle(data, random_state=1)
+    dataset = [shuffle_data]
     task_type = cfg['type']
-    y = data[cfg['target']]
-    X = data.drop([cfg['target']], axis=1)
+    y = shuffle_data[cfg['target']].reset_index(drop=True)
+    X = shuffle_data.drop([cfg['target']], axis=1).reset_index(drop=True)
     target = cfg['target']
     data_path = cfg['data_path']
     file = cfg['data_name']
@@ -279,8 +281,8 @@ def cross_validation(X, y, args, init_predictor):
     k_fold = args.k_fold
     unit = int(len(X)/k_fold)
     total_pred = pd.DataFrame()
+    predictor = init_predictor
     for i in range(k_fold):
-        predictor = init_predictor
         if i == k_fold-1:
             train_x = X.drop(range(unit*i, len(X)))
             train_y = y.drop(range(unit*i, len(X)))
@@ -289,12 +291,11 @@ def cross_validation(X, y, args, init_predictor):
             train_x = X.drop(range(unit*i, unit*(i+1)))
             train_y = y.drop(range(unit*i, unit*(i+1)))
             test_x = X.iloc[unit*i:unit*(i+1), :]
-
         predictor.fit(train_x, train_y)
         pred = pd.Series(predictor.predict(test_x))
+        pred.index = test_x.index
         total_pred = pd.concat([total_pred, pred], axis=0)
     total_pred.columns = ['cv_predict']
-    total_pred = total_pred.reset_index(drop=True)
     return total_pred, predictor.classes_
 
 
