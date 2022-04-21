@@ -20,7 +20,9 @@ if __name__ == '__main__':
     parser.add_argument(
         "--scoring", help="cls: accuracy, f1, recall, precision, specificity; reg: r2, neg_mean_absolute_error, neg_mean_squared_error", default="accuracy")
     parser.add_argument(
-        "--con_mat", help="Do you need to gernerate the confusion_matrix?(False or True)", default=False, type=bool)
+        "--k_fold", help="set k value , need to >1", default=5, type=int)
+    parser.add_argument(
+        "--confusion_m", help="Do you need to gernerate the confusion_matrix?(False or True)", default=False, type=bool)
     args = parser.parse_args()
 
     with open('./dataset/custom.json') as f:
@@ -39,9 +41,9 @@ if __name__ == '__main__':
         level=logging.DEBUG, filename=log_path, filemode='w', format=FORMAT)
 
     print(
-        f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, scoring: {args.scoring}')
+        f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, scoring: {args.scoring}, k_fold: {args.k_fold}, confusion_m: {args.confusion_m}')
     logging.info(
-        f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, scoring: {args.scoring}')
+        f'Algo: {args.algo}, Model: {args.model}, Data: {args.data}, scoring: {args.scoring}, k_fold: {args.k_fold}, confusion_m: {args.confusion_m}')
 
     print(f'data_path = {data_path}')
     logging.info(f'data_path = {data_path}')

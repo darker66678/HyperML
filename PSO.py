@@ -11,10 +11,10 @@ specificity = make_scorer(recall_score, pos_label=0)
 
 
 class PSO(object):
-    def __init__(self, particle_num, particle_dim, iter_num, c1, c2, w, model_cfg, X, y, file, model, folder, scoring, task_type, algo_MLconfig):
+    def __init__(self, particle_num, particle_dim, iter_num, c1, c2, w, model_cfg, X, y, file, model, folder, scoring, task_type, algo_MLconfig,k_fold):
         self.folder = folder
         self.model = model
-
+        self.k_fold = k_fold
         self.int_param = []
         self.class_param = []
         self.param_name = []
@@ -84,7 +84,7 @@ class PSO(object):
                     knn = self.ML_model(n_neighbors=particle_loc[i][0], weights=class_particle[0], algorithm=class_particle[1],
                                         leaf_size=particle_loc[i][1], metric=class_particle[2], metric_params=None, n_jobs=-1,)
                     cv_scores = cross_validate(
-                        knn, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                        knn, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                 params.append([particle_loc[i][0], particle_loc[i]
                                [1], class_particle[0], class_particle[1], class_particle[2]])
             elif(self.model == "ADA"):
@@ -92,7 +92,7 @@ class PSO(object):
                     ada = self.ML_model[0](n_estimators=particle_loc[i][0], learning_rate=particle_loc[i][1], algorithm=class_particle[0], base_estimator=self.ML_model[1](
                         criterion=class_particle[1], max_depth=particle_loc[i][4], min_samples_split=particle_loc[i][5], min_samples_leaf=particle_loc[i][6], max_features=class_particle[2]))
                     cv_scores = cross_validate(
-                        ada, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                        ada, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                     params.append([particle_loc[i][0], particle_loc[i][1], class_particle[0],
                                    class_particle[1], particle_loc[i][4], particle_loc[i][5], particle_loc[i][6], class_particle[2]])
 
@@ -103,7 +103,7 @@ class PSO(object):
                                            i][3], min_samples_leaf=particle_loc[i][4],
                                        max_features=class_particle[1], n_jobs=-1,)
                     cv_scores = cross_validate(
-                        rf, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                        rf, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                     params.append([particle_loc[i][0], class_particle[0], particle_loc[i]
                                    [2], particle_loc[i][3], particle_loc[i][4], class_particle[1]])
 
@@ -112,7 +112,7 @@ class PSO(object):
                     mlp = self.ML_model(hidden_layer_sizes=[particle_loc[i][0], particle_loc[i][1]], activation=class_particle[0], solver=class_particle[1], alpha=particle_loc[i][2], batch_size='auto', learning_rate=class_particle[2], learning_rate_init=particle_loc[i][3], max_iter=particle_loc[i]
                                         [4], shuffle=True, random_state=None, tol=particle_loc[i][5], verbose=False, warm_start=False, nesterovs_momentum=True, early_stopping=False, beta_1=particle_loc[i][6], beta_2=particle_loc[i][7], epsilon=1e-08, n_iter_no_change=particle_loc[i][8])
                     cv_scores = cross_validate(
-                        mlp, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                        mlp, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                 params.append([particle_loc[i][0], particle_loc[i][1], particle_loc[i][2], particle_loc[i][3], particle_loc[i][4],
                                particle_loc[i][5], particle_loc[i][6], particle_loc[i][7], particle_loc[i][8], class_particle[0], class_particle[1], class_particle[2]])
 
@@ -121,7 +121,7 @@ class PSO(object):
                     svm = self.ML_model(C=particle_loc[i][0], tol=particle_loc[i][1],
                                         max_iter=particle_loc[i][2], gamma=particle_loc[i][3], kernel=class_particle[0], cache_size=1000)
                     cv_scores = cross_validate(
-                        svm, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                        svm, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                 params.append([particle_loc[i][0], particle_loc[i][1],
                                particle_loc[i][2], particle_loc[i][3], class_particle[0]])
 

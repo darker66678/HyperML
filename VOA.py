@@ -11,8 +11,8 @@ specificity = make_scorer(recall_score, pos_label=0)
 
 class VOA(object):
     def __init__(self, virus_num, virus_dim, strong_growth_rate, common_growth_rate, s_proportion, total_virus_limit,
-                 intensity, model_cfg, X, y, model, scoring, task_type, folder, file, algo_MLconfig):
-
+                 intensity, model_cfg, X, y, model, scoring, task_type, folder, file, algo_MLconfig, k_fold):
+        self.k_fold = k_fold
         self.virus_num = virus_num
         self.virus_dim = virus_dim
         self.s_proportion = s_proportion
@@ -91,7 +91,7 @@ class VOA(object):
                         knn = self.ML_model(
                             n_neighbors=current_parameter[i][0], weights=class_particle[0], algorithm=class_particle[1], leaf_size=current_parameter[i][1], metric=class_particle[2], n_jobs=-1)
                         cv_scores = cross_validate(
-                            knn, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                            knn, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                     print(len(params), cv_scores['test_score'].mean())
                     if(record == True):
                         params.append([current_parameter[i][0], current_parameter[i][1], class_particle[0],
@@ -101,7 +101,7 @@ class VOA(object):
                         ada = self.ML_model[0](n_estimators=current_parameter[i][0], learning_rate=current_parameter[i][1], algorithm=class_particle[0], base_estimator=self.ML_model[1](
                             criterion=class_particle[1], max_depth=current_parameter[i][4], min_samples_split=current_parameter[i][5], min_samples_leaf=current_parameter[i][6], max_features=class_particle[2]))
                         cv_scores = cross_validate(
-                            ada, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                            ada, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                     print(len(params), cv_scores['test_score'].mean())
                     if(record == True):
                         params.append([current_parameter[i][0], current_parameter[i][1], class_particle[0],
@@ -113,7 +113,7 @@ class VOA(object):
                                                i][3], min_samples_leaf=current_parameter[i][4],
                                            max_features=class_particle[1], n_jobs=-1)
                         cv_scores = cross_validate(
-                            rf, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                            rf, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                     print(len(params), cv_scores['test_score'].mean())
                     if(record == True):
                         params.append([current_parameter[i][0], class_particle[0], current_parameter[i]
@@ -127,7 +127,7 @@ class VOA(object):
                                             beta_1=current_parameter[i][6], beta_2=current_parameter[i][7],
                                             n_iter_no_change=current_parameter[i][8])
                         cv_scores = cross_validate(
-                            mlp, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                            mlp, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                     print(len(params), cv_scores['test_score'].mean())
                     if(record == True):
                         params.append(
@@ -140,7 +140,7 @@ class VOA(object):
                         svm = self.ML_model(C=current_parameter[i][0], kernel=class_particle[0],  gamma=current_parameter[i]
                                             [3], tol=current_parameter[i][1], cache_size=1000, max_iter=current_parameter[i][2])
                         cv_scores = cross_validate(
-                            svm, self.X, self.y, cv=5, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                            svm, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                     print(len(params), cv_scores['test_score'].mean())
                     if(record == True):
                         params.append(

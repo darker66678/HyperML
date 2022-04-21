@@ -77,7 +77,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
 
         starttime = datetime.datetime.now()
         pso = PSO(particle_num, particle_dim, iter_num, c1,
-                  c2, w, model_cfg, X, y, file, args.model, folder, args.scoring, task_type, algo_MLconfig)
+                  c2, w, model_cfg, X, y, file, args.model, folder, args.scoring, task_type, algo_MLconfig, args.k_fold)
         results, ML_model, best_parameter, class_param, param_name = pso.main()
         endtime = datetime.datetime.now()
         logging.info(f"time: {endtime - starttime}")
@@ -102,7 +102,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
         intensity = algo_cfg['intensity']
         starttime = datetime.datetime.now()
         voa = VOA(virus_num, virus_dim, strong_growth_rate,
-                  common_growth_rate, s_proportion, total_virus_limit, intensity, model_cfg, X, y, args.model, args.scoring, task_type, folder, file, algo_MLconfig)
+                  common_growth_rate, s_proportion, total_virus_limit, intensity, model_cfg, X, y, args.model, args.scoring, task_type, folder, file, algo_MLconfig, args.k_fold)
         results, ML_model, best_parameter, class_param, param_name = voa.main()
         endtime = datetime.datetime.now()
         logging.info((f"time:{endtime - starttime} "))
@@ -114,7 +114,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
 
     boxpath = f'{folder}/{args.algo}_{args.model}_{file}_box.jpg'
     plot_boxplot(results, boxpath)
-    if args.con_mat:
+    if args.confusion_m:
         predict_data = model_predict(
             args.model, ML_model, best_parameter, class_param, X, y, task_type, folder, param_name)
         predict_data.to_csv(
