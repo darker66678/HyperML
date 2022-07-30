@@ -13,7 +13,9 @@ for _ in logging.root.manager.loggerDict:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", help="KNN,MLP,SVM,RF,ADA", default="ADA")
+    parser.add_argument(
+        "--model", help="KNN,MLP,SVM,RF,ADA,XGBoost", default="ADA")
+    # --AutoML --randomsearch bayessearch XGBoost
     parser.add_argument(
         "--data", help="custom", default="custom")
     parser.add_argument("--algo", help="PSO,VOA", default="PSO")
