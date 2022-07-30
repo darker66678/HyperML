@@ -7,6 +7,7 @@ import datetime
 import logging
 from PSO import PSO
 from VOA import VOA
+from Random_search import RANDOM_SEARCH
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.svm import SVC, SVR
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, AdaBoostClassifier, AdaBoostRegressor
@@ -107,6 +108,24 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
         voa = VOA(virus_num, virus_dim, strong_growth_rate,
                   common_growth_rate, s_proportion, total_virus_limit, intensity, model_cfg, X, y, args.model, args.scoring, task_type, folder, file, algo_MLconfig, args.k_fold)
         results, ML_model, best_parameter, class_param, param_name = voa.main()
+        endtime = datetime.datetime.now()
+        logging.info((f"time:{endtime - starttime} "))
+        logging.info("-----------------------\n\n")
+        print("time: ", (endtime - starttime))
+        print("---------------------------")
+        results.to_csv(
+            f'{folder}/{args.algo}({args.model})_{file}.csv')
+
+    elif(args.algo == "RANDOM"):
+        with open(f'./cfg/algo/{args.algo}_config.json') as f:
+            algo_cfg = json.load(f)
+            print(f'RANDOM SERARCH config: {algo_cfg}')
+            logging.info(f'RANDOM SERARCH config: {algo_cfg}')
+
+        iter_num = algo_cfg['iter_num']
+        starttime = datetime.datetime.now()
+        results, ML_model, best_parameter, class_param, param_name = RANDOM_SEARCH(
+            iter_num, model_cfg, X, y, args.model, args.scoring, task_type, folder, file, algo_MLconfig, args.k_fold)
         endtime = datetime.datetime.now()
         logging.info((f"time:{endtime - starttime} "))
         logging.info("-----------------------\n\n")
@@ -238,11 +257,12 @@ def model_predict(ML_model, parameter, class_param, X, y, task_type, folder, par
     for index, class_num in enumerate(class_param):
         count = 1
         for class_name in param_name[class_num]:
-            if(count-1 < parameter[class_num] <= count):
-                parameter[class_num] = class_name
-                break
-            else:
-                count += 1
+            if(not(isinstance(parameter[class_num], str))):
+                if(count-1 < parameter[class_num] <= count):
+                    parameter[class_num] = class_name
+                    break
+                else:
+                    count += 1
     model = args.model
     if(model == "KNN"):
         predictor = ML_model(n_neighbors=parameter[0], leaf_size=parameter[1], metric=parameter[4],  weights=parameter[2],

@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # --AutoML --randomsearch bayessearch XGBoost
     parser.add_argument(
         "--data", help="custom", default="custom")
-    parser.add_argument("--algo", help="PSO,VOA", default="PSO")
+    parser.add_argument("--algo", help="PSO,VOA,RANDOM", default="PSO")
     parser.add_argument(
         "--scoring", help="cls: accuracy, f1, recall, precision, specificity; reg: r2, neg_mean_absolute_error, neg_mean_squared_error", default="accuracy")
     parser.add_argument(
