@@ -7,11 +7,12 @@ import datetime
 import logging
 from PSO import PSO
 from VOA import VOA
-from Random_search import RANDOM_SEARCH
+from RANDOM import RANDOM_SEARCH
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.svm import SVC, SVR
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, AdaBoostClassifier, AdaBoostRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
+import xgboost
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -31,6 +32,8 @@ def load_ML_model_cfg(args):
         link = './cfg/ml_model/RF_config.json'
     elif(args.model == "ADA"):
         link = './cfg/ml_model/ADA_config.json'
+    elif(args.model == "XGBoost"):
+        link = './cfg/ml_model/XGBoost_config.json'
     with open(link) as f:
         model_cfg = json.load(f)
 
@@ -250,6 +253,45 @@ def algo_MLconfig(model, task_type, model_cfg):
             ML_model = [AdaBoostClassifier, DecisionTreeClassifier]
         elif task_type == "regression":
             ML_model = [AdaBoostRegressor, DecisionTreeRegressor]
+
+    elif(model == "XGBoost"):
+        n_estimators = [model_cfg['n_estimators']
+                        ["max"], model_cfg['n_estimators']["min"]]
+        max_depth = [model_cfg['max_depth']
+                     ["max"], model_cfg['max_depth']["min"]]
+        max_leaves = [model_cfg['max_leaves']
+                      ["max"], model_cfg['max_leaves']["min"]]
+        grow_policy = [model_cfg['grow_policy']
+                       ["max"], model_cfg['grow_policy']["min"]]
+        learning_rate = [model_cfg['learning_rate']
+                         ["max"], model_cfg['learning_rate']["min"]]
+        booster = [model_cfg['booster']["max"], model_cfg['booster']["min"]]
+        tree_method = [model_cfg['tree_method']
+                       ["max"], model_cfg['tree_method']["min"]]
+        gamma = [model_cfg['gamma']["max"], model_cfg['gamma']["min"]]
+        min_child_weight = [model_cfg['min_child_weight']
+                            ["max"], model_cfg['min_child_weight']["min"]]
+        max_delta_step = [model_cfg['max_delta_step']
+                          ["max"], model_cfg['max_delta_step']["min"]]
+        subsample = [model_cfg['subsample']
+                     ["max"], model_cfg['subsample']["min"]]
+        colsample_bytree = [model_cfg['colsample_bytree']
+                            ["max"], model_cfg['colsample_bytree']["min"]]
+        colsample_bylevel = [model_cfg['colsample_bylevel']
+                             ["max"], model_cfg['colsample_bylevel']["min"]]
+        colsample_bynode = [model_cfg['colsample_bynode']
+                            ["max"], model_cfg['colsample_bynode']["min"]]
+        gammreg_alphaa = [model_cfg['reg_alpha']
+                          ["max"], model_cfg['reg_alpha']["min"]]
+        importance_type = [model_cfg['importance_type']
+                           ["max"], model_cfg['importance_type']["min"]]
+        max_min = [n_estimators, max_depth, max_leaves, grow_policy, learning_rate, booster, tree_method, gamma, min_child_weight,
+                   max_delta_step, subsample, colsample_bytree, colsample_bylevel, colsample_bynode, gammreg_alphaa, importance_type]
+        if task_type == "classification":
+            ML_model = xgboost.XGBClassifier
+        elif task_type == "regression":
+            ML_model = xgboost.XGBRegressor
+
     return max_min, ML_model
 
 
@@ -279,6 +321,9 @@ def model_predict(ML_model, parameter, class_param, X, y, task_type, folder, par
     elif(model == "ADA"):
         predictor = ML_model[0](n_estimators=parameter[0], learning_rate=parameter[1], algorithm=parameter[2], base_estimator=ML_model[1](
             criterion=parameter[3], max_depth=parameter[4], min_samples_split=parameter[5], min_samples_leaf=parameter[6], max_features=parameter[7]))
+    elif(model == "XGBoost"):
+        predictor = ML_model(n_estimators=parameter[0], max_depth=parameter[1],
+                             max_leaves=parameter[2], grow_policy=parameter[3], learning_rate=parameter[4], booster=parameter[5], tree_method=parameter[6], gamma=parameter[7], min_child_weight=parameter[8], max_delta_step=parameter[9], subsample=parameter[10], colsample_bytree=parameter[11], colsample_bylevel=parameter[12], colsample_bynode=parameter[13], reg_alpha=parameter[14], importance_type=parameter[15], n_jobs=-1)
 
     cv_pred, all_label = cross_validation(X, y, args, predictor)
     cv_pred_data = pd.concat([X, pd.DataFrame(y),  cv_pred], axis=1)

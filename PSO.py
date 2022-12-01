@@ -11,7 +11,7 @@ specificity = make_scorer(recall_score, pos_label=0)
 
 
 class PSO(object):
-    def __init__(self, particle_num, particle_dim, iter_num, c1, c2, w, model_cfg, X, y, file, model, folder, scoring, task_type, algo_MLconfig,k_fold):
+    def __init__(self, particle_num, particle_dim, iter_num, c1, c2, w, model_cfg, X, y, file, model, folder, scoring, task_type, algo_MLconfig, k_fold):
         self.folder = folder
         self.model = model
         self.k_fold = k_fold
@@ -66,6 +66,64 @@ class PSO(object):
             particle_dir.append(tmp2)
         return particle_loc, particle_dir
 
+    def ML_cross_validation(self, particle_loc, class_particle, params, i):
+        if(self.model == "KNN"):
+            with parallel_backend('threading'):
+                knn = self.ML_model(n_neighbors=particle_loc[i][0], weights=class_particle[0], algorithm=class_particle[1],
+                                    leaf_size=particle_loc[i][1], metric=class_particle[2], metric_params=None, n_jobs=-1,)
+                cv_scores = cross_validate(
+                    knn, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+            params.append([particle_loc[i][0], particle_loc[i]
+                           [1], class_particle[0], class_particle[1], class_particle[2]])
+        elif(self.model == "ADA"):
+            with parallel_backend('threading'):
+                ada = self.ML_model[0](n_estimators=particle_loc[i][0], learning_rate=particle_loc[i][1], algorithm=class_particle[0], base_estimator=self.ML_model[1](
+                    criterion=class_particle[1], max_depth=particle_loc[i][4], min_samples_split=particle_loc[i][5], min_samples_leaf=particle_loc[i][6], max_features=class_particle[2]))
+                cv_scores = cross_validate(
+                    ada, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                params.append([particle_loc[i][0], particle_loc[i][1], class_particle[0],
+                               class_particle[1], particle_loc[i][4], particle_loc[i][5], particle_loc[i][6], class_particle[2]])
+
+        elif(self.model == "RF"):
+            with parallel_backend('threading'):
+                rf = self.ML_model(n_estimators=particle_loc[i][0], criterion=class_particle[0],
+                                   max_depth=particle_loc[i][2], min_samples_split=particle_loc[
+                    i][3], min_samples_leaf=particle_loc[i][4],
+                    max_features=class_particle[1], n_jobs=-1,)
+                cv_scores = cross_validate(
+                    rf, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+                params.append([particle_loc[i][0], class_particle[0], particle_loc[i]
+                               [2], particle_loc[i][3], particle_loc[i][4], class_particle[1]])
+
+        elif(self.model == "MLP"):
+            with parallel_backend('threading'):
+                mlp = self.ML_model(hidden_layer_sizes=[particle_loc[i][0], particle_loc[i][1]], activation=class_particle[0], solver=class_particle[1], alpha=particle_loc[i][2], batch_size='auto', learning_rate=class_particle[2], learning_rate_init=particle_loc[i][3], max_iter=particle_loc[i]
+                                    [4], shuffle=True, random_state=None, tol=particle_loc[i][5], verbose=False, warm_start=False, nesterovs_momentum=True, early_stopping=False, beta_1=particle_loc[i][6], beta_2=particle_loc[i][7], epsilon=1e-08, n_iter_no_change=particle_loc[i][8])
+                cv_scores = cross_validate(
+                    mlp, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+            params.append([particle_loc[i][0], particle_loc[i][1], particle_loc[i][2], particle_loc[i][3], particle_loc[i][4],
+                           particle_loc[i][5], particle_loc[i][6], particle_loc[i][7], particle_loc[i][8], class_particle[0], class_particle[1], class_particle[2]])
+
+        elif (self.model == "SVM"):
+            with parallel_backend('threading'):
+                svm = self.ML_model(C=particle_loc[i][0], tol=particle_loc[i][1],
+                                    max_iter=particle_loc[i][2], gamma=particle_loc[i][3], kernel=class_particle[0], cache_size=1000)
+                cv_scores = cross_validate(
+                    svm, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+            params.append([particle_loc[i][0], particle_loc[i][1],
+                           particle_loc[i][2], particle_loc[i][3], class_particle[0]])
+        elif (self.model == "XGBoost"):
+            with parallel_backend('threading'):
+                xg_params = {"n_estimators": particle_loc[i][0], "max_depth": particle_loc[i][1],
+                             "max_leaves": particle_loc[i][2], "grow_policy": class_particle[0], "learning_rate": particle_loc[i][4], "booster": class_particle[1], "tree_method": class_particle[2], "gamma": particle_loc[i][7], "min_child_weight": particle_loc[i][8], "max_delta_step": particle_loc[i][9], "subsample": particle_loc[i][10], "colsample_bytree": particle_loc[i][11], "colsample_bylevel": particle_loc[i][12], "colsample_bynode": particle_loc[i][13], "reg_alpha": particle_loc[i][14], "importance_type": class_particle[3], "n_jobs": -1}
+                xg = self.ML_model(**xg_params)
+                cv_scores = cross_validate(
+                    xg, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
+            params.append([particle_loc[i][0], particle_loc[i][1],
+                           particle_loc[i][2], class_particle[0], particle_loc[i][4], class_particle[1], class_particle[2], particle_loc[i][7], particle_loc[i][8], particle_loc[i][9], particle_loc[i][10], particle_loc[i][11], particle_loc[i][12], particle_loc[i][13], particle_loc[i][14], class_particle[3]])
+
+        return cv_scores, params
+
     def fitness(self, particle_loc, test, train, params):
         fitness_value = []
         for i in range(self.particle_num):
@@ -79,51 +137,8 @@ class PSO(object):
                     else:
                         count += 1
 
-            if(self.model == "KNN"):
-                with parallel_backend('threading'):
-                    knn = self.ML_model(n_neighbors=particle_loc[i][0], weights=class_particle[0], algorithm=class_particle[1],
-                                        leaf_size=particle_loc[i][1], metric=class_particle[2], metric_params=None, n_jobs=-1,)
-                    cv_scores = cross_validate(
-                        knn, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
-                params.append([particle_loc[i][0], particle_loc[i]
-                               [1], class_particle[0], class_particle[1], class_particle[2]])
-            elif(self.model == "ADA"):
-                with parallel_backend('threading'):
-                    ada = self.ML_model[0](n_estimators=particle_loc[i][0], learning_rate=particle_loc[i][1], algorithm=class_particle[0], base_estimator=self.ML_model[1](
-                        criterion=class_particle[1], max_depth=particle_loc[i][4], min_samples_split=particle_loc[i][5], min_samples_leaf=particle_loc[i][6], max_features=class_particle[2]))
-                    cv_scores = cross_validate(
-                        ada, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
-                    params.append([particle_loc[i][0], particle_loc[i][1], class_particle[0],
-                                   class_particle[1], particle_loc[i][4], particle_loc[i][5], particle_loc[i][6], class_particle[2]])
-
-            elif(self.model == "RF"):
-                with parallel_backend('threading'):
-                    rf = self.ML_model(n_estimators=particle_loc[i][0], criterion=class_particle[0],
-                                       max_depth=particle_loc[i][2], min_samples_split=particle_loc[
-                                           i][3], min_samples_leaf=particle_loc[i][4],
-                                       max_features=class_particle[1], n_jobs=-1,)
-                    cv_scores = cross_validate(
-                        rf, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
-                    params.append([particle_loc[i][0], class_particle[0], particle_loc[i]
-                                   [2], particle_loc[i][3], particle_loc[i][4], class_particle[1]])
-
-            elif(self.model == "MLP"):
-                with parallel_backend('threading'):
-                    mlp = self.ML_model(hidden_layer_sizes=[particle_loc[i][0], particle_loc[i][1]], activation=class_particle[0], solver=class_particle[1], alpha=particle_loc[i][2], batch_size='auto', learning_rate=class_particle[2], learning_rate_init=particle_loc[i][3], max_iter=particle_loc[i]
-                                        [4], shuffle=True, random_state=None, tol=particle_loc[i][5], verbose=False, warm_start=False, nesterovs_momentum=True, early_stopping=False, beta_1=particle_loc[i][6], beta_2=particle_loc[i][7], epsilon=1e-08, n_iter_no_change=particle_loc[i][8])
-                    cv_scores = cross_validate(
-                        mlp, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
-                params.append([particle_loc[i][0], particle_loc[i][1], particle_loc[i][2], particle_loc[i][3], particle_loc[i][4],
-                               particle_loc[i][5], particle_loc[i][6], particle_loc[i][7], particle_loc[i][8], class_particle[0], class_particle[1], class_particle[2]])
-
-            elif (self.model == "SVM"):
-                with parallel_backend('threading'):
-                    svm = self.ML_model(C=particle_loc[i][0], tol=particle_loc[i][1],
-                                        max_iter=particle_loc[i][2], gamma=particle_loc[i][3], kernel=class_particle[0], cache_size=1000)
-                    cv_scores = cross_validate(
-                        svm, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
-                params.append([particle_loc[i][0], particle_loc[i][1],
-                               particle_loc[i][2], particle_loc[i][3], class_particle[0]])
+            cv_scores, params = self.ML_cross_validation(
+                particle_loc, class_particle, params, i)
 
             self.count += 1
             logging.info(
@@ -235,8 +250,18 @@ class PSO(object):
             if current_best_fitness > best_fitness:
                 best_fitness = current_best_fitness
                 gbest_parameter = current_best_parameter
+
+            logging_best_parameter = gbest_parameter.copy()
+            for index, class_num in enumerate(self.class_param):
+                count = 1
+                for class_name in self.param_name[class_num]:
+                    if(count-1 < logging_best_parameter[class_num] <= count):
+                        logging_best_parameter[class_num] = class_name
+                        break
+                    else:
+                        count += 1
             logging.info(
-                f"iteration is :,{i+1},Best parameters:{gbest_parameter},Best fitness: {best_fitness}")
+                f"iteration is :,{i+1},Best parameters:{logging_best_parameter},Best fitness: {best_fitness}")
             # print(f"iteration is :,{i+1},Best parameters:{gbest_parameter},Best fitness: {best_fitness}")
 
             results.append(best_fitness)
@@ -251,8 +276,8 @@ class PSO(object):
         self.plot(results, results_ave, good_fitness)
 
         logging.info(
-            f'Final parameters are: , {self.keys}, \n, {gbest_parameter}')
-        print('Final parameters are :', self.keys, "\n", gbest_parameter)
+            f'Final parameters are: , {logging_best_parameter}')
+        print('Final parameters are :', logging_best_parameter)
         results = pd.concat(
             [pd.Series(train), pd.Series(test)], axis=1)
         results = pd.concat(

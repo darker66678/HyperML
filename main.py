@@ -6,6 +6,7 @@ from funcitons import *
 import datetime
 import os
 from feature_selection import *
+from clustering import *
 
 FORMAT = '%(asctime)s %(levelname)s: %(message)s'
 for _ in logging.root.manager.loggerDict:
@@ -14,8 +15,8 @@ for _ in logging.root.manager.loggerDict:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--model", help="KNN,MLP,SVM,RF,ADA,XGBoost", default="ADA")
-    # --AutoML --randomsearch bayessearch XGBoost
+        "--model", help="KNN,MLP,SVM,RF,ADA,XGBoost", default="XGBoost")
+    # --AutoML
     parser.add_argument(
         "--data", help="custom", default="custom")
     parser.add_argument("--algo", help="PSO,VOA,RANDOM", default="PSO")
@@ -29,6 +30,10 @@ if __name__ == '__main__':
         "--feat_select", help="feature selection", default=False, type=bool)
     parser.add_argument(
         "--feat_select_type", help="chi2, pearson, ANOVA, MIC ", default="chi2", type=str)
+    parser.add_argument(
+        "--clustering", help="clustering", default=False, type=bool)
+    parser.add_argument(
+        "--clus_algo", help="KMeans, DBSCAN", default='DBSCAN', type=str)
 
     args = parser.parse_args()
 
@@ -38,7 +43,16 @@ if __name__ == '__main__':
         args.data, custom_data)
 
     if(args.feat_select == True):
-        feat_score(args.feat_select_type, task_type, y, X, file)
+        if(args.clustering == True):
+            print('Please check you want to do which(featrue scoring or clustering)')
+        else:
+            feat_score(args.feat_select_type, task_type, y, X, file)
+
+    elif(args.clustering == True):
+        if(args.feat_select == True):
+            print('Please check you want to do which(featrue scoring or clustering)')
+        else:
+            clustering(args.clus_algo, y, X, file)
 
     else:
         model_cfg = load_ML_model_cfg(args)
