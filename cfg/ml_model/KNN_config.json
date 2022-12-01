@@ -1,7 +1,7 @@
 {
     "neighbors": {
-        "max": 50,
-        "min": 10,
+        "max": 10,
+        "min": 5,
         "int": true,
         "class": false
     },

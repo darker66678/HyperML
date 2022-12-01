@@ -8,8 +8,8 @@ def plot_bar(select_type, res, X, y, file):
     plt.figure()
     plt.bar(bar_X, res)
     plt.title(f'Data: {file}, Method:{select_type}, Target:{y.name}')
-    plt.savefig(f'./feature_score/{file}-{select_type}.png')
-    print("save bar chart in ./feature_score")
+    plt.savefig(f'./results/feature_score/{file}-{select_type}.png')
+    
 
 
 def feat_score(select_type, task_type, y, X, file):
@@ -30,3 +30,5 @@ def feat_score(select_type, task_type, y, X, file):
     print(list(X.columns))
     print(res)
     plot_bar(select_type, res, X, y, file)
+    print("finished")
+    #TODO record in log

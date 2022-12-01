@@ -1,0 +1,6 @@
+{
+    "data_path": "./dataset/solar.csv",
+    "target": "Irr_target",
+    "data_name": "solar",
+    "type": "regression"
+}

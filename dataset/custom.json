@@ -1,6 +1,0 @@
-{
-    "data_path": "./dataset/test_solar.csv",
-    "target": "Switch_target",
-    "data_name": "solar",
-    "type": "classification"
-}

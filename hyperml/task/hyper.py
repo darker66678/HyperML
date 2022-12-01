@@ -1,152 +1,22 @@
-from sklearn.metrics import make_scorer
-from sklearn.metrics import roc_curve
 import pandas as pd
-import plotly.express as px
 import json
 import datetime
 import logging
-from PSO import PSO
-from VOA import VOA
-from RANDOM import RANDOM_SEARCH
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import sklearn.metrics
+import matplotlib.pyplot as plt
+import plotly.express as px
+import sys
+sys.path.append("..")
+from algo.PSO import PSO
+from algo.VOA import VOA
+from algo.RANDOM import RANDOM_SEARCH
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.svm import SVC, SVR
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, AdaBoostClassifier, AdaBoostRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 import xgboost
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-import sklearn.metrics
-from sklearn.utils import shuffle
-
-
-def load_ML_model_cfg(args):
-    if(args.model == "KNN"):
-        link = './cfg/ml_model/KNN_config.json'
-    elif(args.model == "MLP"):
-        link = './cfg/ml_model/MLP_config.json'
-    elif(args.model == "SVM"):
-        link = './cfg/ml_model/SVM_config.json'
-    elif(args.model == "RF"):
-        link = './cfg/ml_model/RF_config.json'
-    elif(args.model == "ADA"):
-        link = './cfg/ml_model/ADA_config.json'
-    elif(args.model == "XGBoost"):
-        link = './cfg/ml_model/XGBoost_config.json'
-    with open(link) as f:
-        model_cfg = json.load(f)
-
-    return model_cfg
-
-
-def load_data(data, cfg):
-    data = pd.read_csv(cfg['data_path'])
-    shuffle_data = shuffle(data, random_state=1)
-    dataset = [shuffle_data]
-    task_type = cfg['type']
-    y = shuffle_data[cfg['target']].reset_index(drop=True)
-    X = shuffle_data.drop([cfg['target']], axis=1).reset_index(drop=True)
-    target = cfg['target']
-    data_path = cfg['data_path']
-    file = cfg['data_name']
-    return dataset, task_type, y, X, file, target, data_path
-
-
-def plot_boxplot(data, boxpath):
-    fig = px.box(data, y="test", title=boxpath[:-4].split("/")[-1])
-    fig.write_image(boxpath)
-
-
-def specificity_func(y_true, y_pred):
-    fpr, tpr, thresholds = roc_curve(y_true, y_pred)
-    speci = 1 - fpr
-    return speci
-
-
-def customize_speci():
-    specificity = make_scorer(specificity_func)
-    return specificity
-
-
-def hyper(args, model_cfg, X, y, file, folder, task_type):
-    if(args.algo == "PSO"):
-        with open('./cfg/algo/PSO_config.json') as f:
-            algo_cfg = json.load(f)
-            print(f'PSO parameters: {algo_cfg}')
-            logging.info(f'PSO config: {algo_cfg}')
-        particle_num = algo_cfg['particle_num']
-        particle_dim = len(model_cfg)
-        iter_num = algo_cfg['iter_num']
-        c1 = algo_cfg['c1']
-        c2 = algo_cfg['c2']
-        w = algo_cfg['w']
-
-        starttime = datetime.datetime.now()
-        pso = PSO(particle_num, particle_dim, iter_num, c1,
-                  c2, w, model_cfg, X, y, file, args.model, folder, args.scoring, task_type, algo_MLconfig, args.k_fold)
-        results, ML_model, best_parameter, class_param, param_name = pso.main()
-        endtime = datetime.datetime.now()
-        logging.info(f"time: {endtime - starttime}")
-        logging.info("-----------------------\n\n")
-        print("time: ", (endtime - starttime))
-        print("---------------------------")
-        results.to_csv(
-            f'{folder}/{args.algo}({args.model})_{file}.csv')
-
-    elif(args.algo == "VOA"):
-        with open('./cfg/algo/VOA_config.json') as f:
-            algo_cfg = json.load(f)
-            print(f'VOA config: {algo_cfg}')
-            logging.info(f'VOA config: {algo_cfg}')
-
-        virus_num = algo_cfg['virus_num']
-        virus_dim = len(model_cfg)
-        s_proportion = algo_cfg['s_proportion']
-        strong_growth_rate = algo_cfg['strong_growth_rate']
-        common_growth_rate = algo_cfg['common_growth_rate']
-        total_virus_limit = algo_cfg['total_virus_limit']
-        intensity = algo_cfg['intensity']
-        starttime = datetime.datetime.now()
-        voa = VOA(virus_num, virus_dim, strong_growth_rate,
-                  common_growth_rate, s_proportion, total_virus_limit, intensity, model_cfg, X, y, args.model, args.scoring, task_type, folder, file, algo_MLconfig, args.k_fold)
-        results, ML_model, best_parameter, class_param, param_name = voa.main()
-        endtime = datetime.datetime.now()
-        logging.info((f"time:{endtime - starttime} "))
-        logging.info("-----------------------\n\n")
-        print("time: ", (endtime - starttime))
-        print("---------------------------")
-        results.to_csv(
-            f'{folder}/{args.algo}({args.model})_{file}.csv')
-
-    elif(args.algo == "RANDOM"):
-        with open(f'./cfg/algo/{args.algo}_config.json') as f:
-            algo_cfg = json.load(f)
-            print(f'RANDOM SERARCH config: {algo_cfg}')
-            logging.info(f'RANDOM SERARCH config: {algo_cfg}')
-
-        iter_num = algo_cfg['iter_num']
-        starttime = datetime.datetime.now()
-        results, ML_model, best_parameter, class_param, param_name = RANDOM_SEARCH(
-            iter_num, model_cfg, X, y, args.model, args.scoring, task_type, folder, file, algo_MLconfig, args.k_fold)
-        endtime = datetime.datetime.now()
-        logging.info((f"time:{endtime - starttime} "))
-        logging.info("-----------------------\n\n")
-        print("time: ", (endtime - starttime))
-        print("---------------------------")
-        results.to_csv(
-            f'{folder}/{args.algo}({args.model})_{file}.csv')
-
-    boxpath = f'{folder}/{args.algo}_{args.model}_{file}_box.jpg'
-    plot_boxplot(results, boxpath)
-    cv_pred_data = model_predict(ML_model, best_parameter, class_param,
-                                 X, y, task_type, folder, param_name, args)
-    cv_pred_data.to_csv(
-        f'{folder}/{args.algo}({args.model})_{file}_cv_predict.csv')
-
-    logging.info("finished!!!")
-    print("finished!!!")
-
 
 def algo_MLconfig(model, task_type, model_cfg):
     if(model == "KNN"):
@@ -294,6 +164,87 @@ def algo_MLconfig(model, task_type, model_cfg):
 
     return max_min, ML_model
 
+def plot_boxplot(data, boxpath):
+    fig = px.box(data, y="test", title=boxpath[:-4].split("/")[-1])
+    fig.write_image(boxpath)
+
+def hyper(args, model_cfg, X, y, file, folder, task_type):
+    if(args.algo == "PSO"):
+        with open('./cfg/algo/PSO_config.json') as f:
+            algo_cfg = json.load(f)
+            print(f'PSO parameters: {algo_cfg}')
+            logging.info(f'PSO config: {algo_cfg}')
+        particle_num = algo_cfg['particle_num']
+        particle_dim = len(model_cfg)
+        iter_num = algo_cfg['iter_num']
+        c1 = algo_cfg['c1']
+        c2 = algo_cfg['c2']
+        w = algo_cfg['w']
+
+        starttime = datetime.datetime.now()
+        pso = PSO(particle_num, particle_dim, iter_num, c1,
+                  c2, w, model_cfg, X, y, file, args.model, folder, args.scoring, task_type, algo_MLconfig, args.k_fold)
+        results, ML_model, best_parameter, class_param, param_name = pso.main()
+        endtime = datetime.datetime.now()
+        logging.info(f"time: {endtime - starttime}")
+        logging.info("-----------------------\n\n")
+        print("time: ", (endtime - starttime))
+        print("---------------------------")
+        results.to_csv(
+            f'{folder}/{args.algo}({args.model})_{file}.csv')
+
+    elif(args.algo == "VOA"):
+        with open('./cfg/algo/VOA_config.json') as f:
+            algo_cfg = json.load(f)
+            print(f'VOA config: {algo_cfg}')
+            logging.info(f'VOA config: {algo_cfg}')
+
+        virus_num = algo_cfg['virus_num']
+        virus_dim = len(model_cfg)
+        s_proportion = algo_cfg['s_proportion']
+        strong_growth_rate = algo_cfg['strong_growth_rate']
+        common_growth_rate = algo_cfg['common_growth_rate']
+        total_virus_limit = algo_cfg['total_virus_limit']
+        intensity = algo_cfg['intensity']
+        starttime = datetime.datetime.now()
+        voa = VOA(virus_num, virus_dim, strong_growth_rate,
+                  common_growth_rate, s_proportion, total_virus_limit, intensity, model_cfg, X, y, args.model, args.scoring, task_type, folder, file, algo_MLconfig, args.k_fold)
+        results, ML_model, best_parameter, class_param, param_name = voa.main()
+        endtime = datetime.datetime.now()
+        logging.info((f"time:{endtime - starttime} "))
+        logging.info("-----------------------\n\n")
+        print("time: ", (endtime - starttime))
+        print("---------------------------")
+        results.to_csv(
+            f'{folder}/{args.algo}({args.model})_{file}.csv')
+
+    elif(args.algo == "RANDOM"):
+        with open(f'./cfg/algo/{args.algo}_config.json') as f:
+            algo_cfg = json.load(f)
+            print(f'RANDOM SERARCH config: {algo_cfg}')
+            logging.info(f'RANDOM SERARCH config: {algo_cfg}')
+
+        iter_num = algo_cfg['iter_num']
+        starttime = datetime.datetime.now()
+        results, ML_model, best_parameter, class_param, param_name = RANDOM_SEARCH(
+            iter_num, model_cfg, X, y, args.model, args.scoring, task_type, folder, file, algo_MLconfig, args.k_fold)
+        endtime = datetime.datetime.now()
+        logging.info((f"time:{endtime - starttime} "))
+        logging.info("-----------------------\n\n")
+        print("time: ", (endtime - starttime))
+        print("---------------------------")
+        results.to_csv(
+            f'{folder}/{args.algo}({args.model})_{file}.csv')
+
+    boxpath = f'{folder}/{args.algo}_{args.model}_{file}_box.jpg'
+    plot_boxplot(results, boxpath)
+    cv_pred_data = model_predict(ML_model, best_parameter, class_param,
+                                 X, y, task_type, folder, param_name, args)
+    cv_pred_data.to_csv(
+        f'{folder}/{args.algo}({args.model})_{file}_cv_predict.csv')
+
+    logging.info("finished!!!")
+    print("finished!!!")
 
 def model_predict(ML_model, parameter, class_param, X, y, task_type, folder, param_name, args):
     for index, class_num in enumerate(class_param):
@@ -325,7 +276,7 @@ def model_predict(ML_model, parameter, class_param, X, y, task_type, folder, par
         predictor = ML_model(n_estimators=parameter[0], max_depth=parameter[1],
                              max_leaves=parameter[2], grow_policy=parameter[3], learning_rate=parameter[4], booster=parameter[5], tree_method=parameter[6], gamma=parameter[7], min_child_weight=parameter[8], max_delta_step=parameter[9], subsample=parameter[10], colsample_bytree=parameter[11], colsample_bylevel=parameter[12], colsample_bynode=parameter[13], reg_alpha=parameter[14], importance_type=parameter[15], n_jobs=-1)
 
-    cv_pred, all_label = cross_validation(X, y, args, predictor)
+    cv_pred, all_label = cross_validation(X, y, args, predictor, task_type)
     cv_pred_data = pd.concat([X, pd.DataFrame(y),  cv_pred], axis=1)
     eval_metrics(task_type, y, cv_pred)
     if args.confusion_m:
@@ -341,8 +292,7 @@ def model_predict(ML_model, parameter, class_param, X, y, task_type, folder, par
             logging.debug("Regression can't plot confusio matrix!")
     return cv_pred_data
 
-
-def cross_validation(X, y, args, init_predictor):
+def cross_validation(X, y, args, init_predictor, task_type):
     k_fold = args.k_fold
     unit = int(len(X)/k_fold)
     total_pred = pd.DataFrame()
@@ -361,8 +311,14 @@ def cross_validation(X, y, args, init_predictor):
         pred.index = test_x.index
         total_pred = pd.concat([total_pred, pred], axis=0)
     total_pred.columns = ['cv_predict']
-    return total_pred, predictor.classes_
+    if(task_type == "classification"):
+        all_label = predictor.classes_
+    elif(task_type == "regression"):
+        all_label = []
+    else:
+        print(f"Unknown task type: {task_type}")
 
+    return total_pred, all_label
 
 def eval_metrics(task_type, y, cv_pred):
     if task_type == "regression":
