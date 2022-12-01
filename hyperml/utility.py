@@ -23,7 +23,7 @@ def load_ML_model_cfg(args):
 
     return model_cfg
 
-def load_data(data, cfg):
+def load_data(cfg):
     data = pd.read_csv(cfg['data_path'])
     shuffle_data = shuffle(data, random_state=1)
     dataset = [shuffle_data]

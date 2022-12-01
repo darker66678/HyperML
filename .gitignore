@@ -130,4 +130,4 @@ dmypy.json
 **/results/*
 !**results/results in here
 **/dataset/*.csv
-**/clustering/*
+
