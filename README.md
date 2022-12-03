@@ -28,12 +28,28 @@ Python 3.8
 In anaconda, ```conda create --name test python=3.8 ``` can create a new env
 
 ```pip install -r requirements.txt``` install all packages
-###  Hyperparameter tuning
-```python main.py --model [ML_model] --algo [Heuristic] --scoring [score]```
+
+### Task
+####  Hyperparameter
+```python ./hyperml/main.py hyper ```
  start to tune the hyperparameters with heuristic
 
- The results will be saved in ```./results```
+Please refer following information on parameter config for your experiment
+```
+hyper_parser.add_argument("-m","--model", help="KNN,MLP,SVM,RF,ADA,XGBoost", default="ADA")
+hyper_parser.add_argument("-a","--algo", help="PSO,VOA,RANDOM", default="RANDOM")
+hyper_parser.add_argument("-s","--scoring", help="cls: accuracy, f1, recall, precision, specificity; reg: r2, neg_mean_absolute_error, neg_mean_squared_error", default="r2")
+hyper_parser.add_argument("-k","--k_fold", help="set k value , need to >1", default=3, type=int)
+hyper_parser.add_argument("-c","--confusion_m", help="Do you need to gernerate the confusion_matrix?(False or True)", default=False, type=bool
+```
 
+####  Clustering
+```python ./hyperml/main.py cluster ```
+
+####  Feature Selection
+```python ./hyperml/main.py feat_select ```
+
+ The results will be saved in ```./results```
 ### Video
 [Tutorial](https://drive.google.com/file/d/1sJkAqQfD991WuM9SoE5HFG3WOh9dtvVJ/view?usp=sharing)
 
