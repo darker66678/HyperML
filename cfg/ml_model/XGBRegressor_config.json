@@ -1,0 +1,119 @@
+{
+    "n_estimators": {
+        "max": 10,
+        "min": 1,
+        "int": true,
+        "class": false
+    },
+    "max_depth": {
+        "max": 500,
+        "min": 1,
+        "int": true,
+        "class": false
+    },
+    "max_leaves": {
+        "max": 100,
+        "min": 1,
+        "int": true,
+        "class": false
+    },
+    "grow_policy": {
+        "max": 2,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "depthwise",
+            "lossguide"
+        ]
+    },
+    "learning_rate": {
+        "max": 0.5,
+        "min": 0.00001,
+        "int": false,
+        "class": false
+    },
+    "booster": {
+        "max": 3,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "gbtree",
+            "gblinear",
+            "dart"
+        ]
+    },
+    "tree_method": {
+        "max": 3,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "exact",
+            "approx",
+            "hist"
+        ]
+    },
+    "gamma": {
+        "max": 500,
+        "min": 0.0001,
+        "int": false,
+        "class": false
+    },
+    "min_child_weight": {
+        "max": 1,
+        "min": 0.0001,
+        "int": false,
+        "class": false
+    },
+    "max_delta_step": {
+        "max": 1,
+        "min": 0.0001,
+        "int": false,
+        "class": false
+    },
+    "subsample": {
+        "max": 1,
+        "min": 0.0001,
+        "int": false,
+        "class": false
+    },
+    "colsample_bytree": {
+        "max": 1,
+        "min": 0.0001,
+        "int": false,
+        "class": false
+    },
+    "colsample_bylevel": {
+        "max": 1,
+        "min": 0.0001,
+        "int": false,
+        "class": false
+    },
+    "colsample_bynode": {
+        "max": 1,
+        "min": 0.0001,
+        "int": false,
+        "class": false
+    },
+    "reg_alpha": {
+        "max": 1,
+        "min": 0.0001,
+        "int": false,
+        "class": false
+    },
+    "importance_type": {
+        "max": 5,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "gain",
+            "weight",
+            "cover",
+            "total_gain",
+            "total_cover"
+        ]
+    }
+}

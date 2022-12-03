@@ -44,6 +44,7 @@ class VOA(object):
             self.scoring = scoring
         self.folder = folder
         self.file = file
+        self.task_type = task_type
         # -------------------------------------------------------------
         self.max_min, self.ML_model = algo_MLconfig(
             model, task_type, model_cfg)
@@ -83,8 +84,12 @@ class VOA(object):
                                class_particle[1], class_particle[2]]+current_parameter[i][self.virus_dim+2:])  # record
         elif(self.model == "ADA"):
             with parallel_backend('threading'):
-                ada = self.ML_model[0](n_estimators=current_parameter[i][0], learning_rate=current_parameter[i][1], algorithm=class_particle[0], base_estimator=self.ML_model[1](
+                if(self.task_type == "classfication"):
+                    ada = self.ML_model[0](n_estimators=current_parameter[i][0], learning_rate=current_parameter[i][1], algorithm=class_particle[0], base_estimator=self.ML_model[1](
                     criterion=class_particle[1], max_depth=current_parameter[i][4], min_samples_split=current_parameter[i][5], min_samples_leaf=current_parameter[i][6], max_features=class_particle[2]))
+                else:
+                    ada = self.ML_model[0](n_estimators=current_parameter[i][0], learning_rate=current_parameter[i][1], loss=class_particle[0], base_estimator=self.ML_model[1](
+                        criterion=class_particle[1], max_depth=current_parameter[i][4], min_samples_split=current_parameter[i][5], min_samples_leaf=current_parameter[i][6], max_features=class_particle[2]))
                 cv_scores = cross_validate(
                     ada, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
 
@@ -412,7 +417,7 @@ virus_count_before_killing: {len(current_parameter)+strong_kill_amount+common_ki
 
         self.plot_curve(lb_fitness)
         logging.info(
-            (f"best_parameter:{best_parameter},best_fitness:{best_fitness}"))
+            (f"best_parameter:{best_parameter}, {list(self.keys)}, best_fitness:{best_fitness}"))
 
         params_number = [i for i in range(self.virus_dim)]
 

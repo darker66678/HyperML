@@ -11,7 +11,7 @@ from sklearn.metrics import make_scorer, recall_score
 specificity = make_scorer(recall_score, pos_label=0)
 
 
-def ML_cross_validation(model, ML_model, current_params, class_particle, k_fold, scoring, X, y, params):
+def ML_cross_validation(model, ML_model, current_params, class_particle, k_fold, scoring, X, y, params,task_type):
     if(model == "KNN"):
         with parallel_backend('threading'):
             knn = ML_model(
@@ -22,7 +22,11 @@ def ML_cross_validation(model, ML_model, current_params, class_particle, k_fold,
                        class_particle[1], class_particle[2]])
     elif(model == "ADA"):
         with parallel_backend('threading'):
-            ada = ML_model[0](n_estimators=current_params[0], learning_rate=current_params[1], algorithm=class_particle[0], base_estimator=ML_model[1](
+            if(task_type == "classfication"):
+                ada = ML_model[0](n_estimators=current_params[0], learning_rate=current_params[1], algorithm=class_particle[0], base_estimator=ML_model[1](
+                criterion=class_particle[1], max_depth=current_params[4], min_samples_split=current_params[5], min_samples_leaf=current_params[6], max_features=class_particle[2]))
+            else:
+                ada = ML_model[0](n_estimators=current_params[0], learning_rate=current_params[1], loss=class_particle[0], base_estimator=ML_model[1](
                 criterion=class_particle[1], max_depth=current_params[4], min_samples_split=current_params[5], min_samples_leaf=current_params[6], max_features=class_particle[2]))
             cv_scores = cross_validate(
                 ada, X, y, cv=k_fold, scoring=scoring, n_jobs=-1, return_train_score=True)
@@ -110,7 +114,7 @@ def RANDOM_SEARCH(iter_num, model_cfg, X, y, model, scoring, task_type, folder, 
                 else:
                     count += 1
         params, cv_scores = ML_cross_validation(
-            model, ML_model, current_params, class_particle, k_fold, scoring, X, y, params)
+            model, ML_model, current_params, class_particle, k_fold, scoring, X, y, params, task_type)
         mean_test_score = cv_scores['test_score'].mean()
         logging.info(f'{len(params)}, {mean_test_score}')
         test.append(mean_test_score)  # test data
@@ -123,5 +127,5 @@ def RANDOM_SEARCH(iter_num, model_cfg, X, y, model, scoring, task_type, folder, 
     best_index = test.index(max(test))
     best_parameter = params[best_index]
     logging.info(
-        (f'best_parameter:{best_parameter},best_fitness:{test[best_index]}'))
+        (f'best_parameter:{best_parameter}, {list(model_cfg.keys())}, best_fitness:{test[best_index]}'))
     return results, ML_model, best_parameter, class_param, param_name

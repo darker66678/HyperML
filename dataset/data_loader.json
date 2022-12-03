@@ -1,6 +1,6 @@
 {
-    "data_path": "./dataset/solar.csv",
-    "target": "Irr_target",
-    "data_name": "solar",
+    "data_path": "./dataset/Breast cancer.csv",
+    "target": "HOMA",
+    "data_name": "Breast",
     "type": "regression"
 }

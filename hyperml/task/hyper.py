@@ -105,8 +105,13 @@ def algo_MLconfig(model, task_type, model_cfg):
                         ["max"], model_cfg['n_estimators']["min"]]
         learning_rate = [model_cfg['learning_rate']["max"],
                          model_cfg['learning_rate']["min"]]
-        algorithm = [model_cfg['algorithm']["max"],
-                     model_cfg['algorithm']["min"]]
+        if(task_type == "classification"):
+            algorithm = [model_cfg['algorithm']["max"],
+                        model_cfg['algorithm']["min"]]
+        elif(task_type == "regression"):
+            loss = [model_cfg['loss']["max"],
+                        model_cfg['loss']["min"]]
+            algorithm = loss
         criterion = [model_cfg['criterion']["max"],
                      model_cfg['criterion']["min"]]
         max_depth = [model_cfg['max_depth']["max"],
@@ -236,6 +241,9 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
         results.to_csv(
             f'{folder}/{args.algo}({args.model})_{file}.csv')
 
+    else:
+        raise (ValueError(f'Unknown algo:{args.algo}'))
+        
     boxpath = f'{folder}/{args.algo}_{args.model}_{file}_box.jpg'
     plot_boxplot(results, boxpath)
     cv_pred_data = model_predict(ML_model, best_parameter, class_param,
@@ -245,6 +253,7 @@ def hyper(args, model_cfg, X, y, file, folder, task_type):
 
     logging.info("finished!!!")
     print("finished!!!")
+    
 
 def model_predict(ML_model, parameter, class_param, X, y, task_type, folder, param_name, args):
     for index, class_num in enumerate(class_param):
@@ -270,8 +279,13 @@ def model_predict(ML_model, parameter, class_param, X, y, task_type, folder, par
         predictor = ML_model(n_estimators=parameter[0],
                              max_depth=parameter[2], min_samples_split=parameter[3], min_samples_leaf=parameter[4], criterion=parameter[1], max_features=parameter[5], n_jobs=-1,)
     elif(model == "ADA"):
-        predictor = ML_model[0](n_estimators=parameter[0], learning_rate=parameter[1], algorithm=parameter[2], base_estimator=ML_model[1](
+        if task_type == "classification":
+            predictor = ML_model[0](n_estimators=parameter[0], learning_rate=parameter[1], algorithm=parameter[2], base_estimator=ML_model[1](
             criterion=parameter[3], max_depth=parameter[4], min_samples_split=parameter[5], min_samples_leaf=parameter[6], max_features=parameter[7]))
+        elif task_type == "regression":
+            predictor = ML_model[0](n_estimators=parameter[0], learning_rate=parameter[1], loss=parameter[2], base_estimator=ML_model[1](
+            criterion=parameter[3], max_depth=parameter[4], min_samples_split=parameter[5], min_samples_leaf=parameter[6], max_features=parameter[7]))
+        
     elif(model == "XGBoost"):
         predictor = ML_model(n_estimators=parameter[0], max_depth=parameter[1],
                              max_leaves=parameter[2], grow_policy=parameter[3], learning_rate=parameter[4], booster=parameter[5], tree_method=parameter[6], gamma=parameter[7], min_child_weight=parameter[8], max_delta_step=parameter[9], subsample=parameter[10], colsample_bytree=parameter[11], colsample_bylevel=parameter[12], colsample_bynode=parameter[13], reg_alpha=parameter[14], importance_type=parameter[15], n_jobs=-1)
@@ -316,7 +330,7 @@ def cross_validation(X, y, args, init_predictor, task_type):
     elif(task_type == "regression"):
         all_label = []
     else:
-        print(f"Unknown task type: {task_type}")
+        raise ValueError(f"Unknown task type: {task_type}")
 
     return total_pred, all_label
 

@@ -1,0 +1,90 @@
+{
+    "hidden_layer_1": {
+        "max": 500,
+        "min": 1,
+        "int": true,
+        "class": false
+    },
+    "hidden_layer_2": {
+        "max": 500,
+        "min": 1,
+        "int": true,
+        "class": false
+    },
+    "alpha": {
+        "max": 0.5,
+        "min": 0.00001,
+        "int": false,
+        "class": false
+    },
+    "learning_rate_init": {
+        "max": 0.5,
+        "min": 0.00001,
+        "int": false,
+        "class": false
+    },
+    "max_iter": {
+        "max": 50000,
+        "min": 1000,
+        "int": true,
+        "class": false
+    },
+    "tol": {
+        "max": 0.5,
+        "min": 0.00001,
+        "int": false,
+        "class": false
+    },
+    "beta_1": {
+        "max": 0.999,
+        "min": 0.001,
+        "int": false,
+        "class": false
+    },
+    "beta_2": {
+        "max": 0.999,
+        "min": 0.001,
+        "int": false,
+        "class": false
+    },
+    "n_iter_no_change": {
+        "max": 1000,
+        "min": 1,
+        "int": true,
+        "class": false
+    },
+    "activation": {
+        "max": 4,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "identity",
+            "logistic",
+            "tanh",
+            "relu"
+        ]
+    },
+    "solver": {
+        "max": 3,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "lbfgs",
+            "sgd",
+            "adam"
+        ]
+    },
+    "learning_rate": {
+        "max": 3,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "constant",
+            "invscaling",
+            "adaptive"
+        ]
+    }
+}

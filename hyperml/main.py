@@ -19,10 +19,10 @@ def _build_parser():
     subcmd.required = True
     
     hyper_parser = subcmd.add_parser('hyper',help='hyperparameter algorithm')
-    hyper_parser.add_argument("-m","--model", help="KNN,MLP,SVM,RF,ADA,XGBoost", default="KNN")
-    hyper_parser.add_argument("-a","--algo", help="PSO,VOA,RANDOM", default="PSO")
+    hyper_parser.add_argument("-m","--model", help="KNN,MLP,SVM,RF,ADA,XGBoost", default="ADA")
+    hyper_parser.add_argument("-a","--algo", help="PSO,VOA,RANDOM", default="RANDOM")
     hyper_parser.add_argument("-s","--scoring", help="cls: accuracy, f1, recall, precision, specificity; reg: r2, neg_mean_absolute_error, neg_mean_squared_error", default="r2")
-    hyper_parser.add_argument("-k","--k_fold", help="set k value , need to >1", default=5, type=int)
+    hyper_parser.add_argument("-k","--k_fold", help="set k value , need to >1", default=3, type=int)
     hyper_parser.add_argument("-c","--confusion_m", help="Do you need to gernerate the confusion_matrix?(False or True)", default=False, type=bool)
 
     cluster_parser = subcmd.add_parser('cluster',help='clustering algorithm')
@@ -41,6 +41,10 @@ if __name__ == '__main__':
         custom_data = json.load(f)
     dataset, task_type, y, X, file, target, data_path = load_data(custom_data)
 
+    folder = f'./results/'
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
     if(args.task == "feat_select"):
         #TODO create log
         feat_score(args.metric, task_type, y, X, file)
@@ -50,7 +54,7 @@ if __name__ == '__main__':
         clustering(args.algo, y, X, file)
 
     elif(args.task == "hyper"):
-        model_cfg = load_ML_model_cfg(args)
+        model_cfg = load_ML_model_cfg(args, task_type)
 
         rightnow = str(datetime.datetime.today()).replace(
             " ", "_").replace(":", "-")[:-7]
@@ -72,10 +76,10 @@ if __name__ == '__main__':
         logging.info(
             f'data:{len(dataset)}, y={target} , X_num = {len(X.columns)}')
 
-        print(f'{args.model} config: {model_cfg}')
-        logging.info(f'{args.model} config: {model_cfg}')
+        print(f'{args.model}_{task_type} config: {model_cfg}')
+        logging.info(f'{args.model}_{task_type} config: {model_cfg}')
 
         hyper(args, model_cfg, X, y, file, folder, task_type)
 
     else:
-        print(f"Unknown task: {args.task} \nwhich task you want to run,[hyper] or [clustering] or [feat_select]")
+        raise ValueError(f"Unknown task: {args.task} \nwhich task you want to run,[hyper] or [clustering] or [feat_select]")

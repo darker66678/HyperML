@@ -5,19 +5,46 @@ import json
 from sklearn.utils import shuffle
 
 
-def load_ML_model_cfg(args):
+def load_ML_model_cfg(args, task_type):
+    if task_type != "classification" and task_type != "regression":
+        raise ValueError(f'Unknown task type: {task_type}')
+
     if(args.model == "KNN"):
-        link = './cfg/ml_model/KNN_config.json'
+        if(task_type == "classification"):
+            link = './cfg/ml_model/KNeighborsClassifier_config.json'
+        else:
+            link = './cfg/ml_model/KNeighborsRegressor_config.json'
+
     elif(args.model == "MLP"):
-        link = './cfg/ml_model/MLP_config.json'
+        if(task_type == "classification"):
+            link = './cfg/ml_model/MLPClassifier_config.json'
+        else:
+            link = './cfg/ml_model/MLPRegressor_config.json'
+
     elif(args.model == "SVM"):
-        link = './cfg/ml_model/SVM_config.json'
+        if(task_type == "classification"):
+            link = './cfg/ml_model/SVC_config.json'
+        else:
+            link = './cfg/ml_model/SVR_config.json'
+
     elif(args.model == "RF"):
-        link = './cfg/ml_model/RF_config.json'
+        if(task_type == "classification"):
+            link = './cfg/ml_model/RandomForestClassifier_config.json'
+        else:
+            link = './cfg/ml_model/RandomForestRegressor_config.json'
+
     elif(args.model == "ADA"):
-        link = './cfg/ml_model/ADA_config.json'
+        if(task_type == "classification"):
+            link = './cfg/ml_model/AdaBoostClassifier_config.json'
+        else:
+            link = './cfg/ml_model/AdaBoostRegressor_config.json'
+
     elif(args.model == "XGBoost"):
-        link = './cfg/ml_model/XGBoost_config.json'
+        if(task_type == "classification"):
+            link = './cfg/ml_model/XGBClassifier_config.json'
+        else:
+            link = './cfg/ml_model/XGBRegressor_config.json'
+
     with open(link) as f:
         model_cfg = json.load(f)
 

@@ -1,11 +1,12 @@
 from sklearn import feature_selection
 import logging
 import matplotlib.pyplot as plt
+import os
 
 
 def plot_bar(select_type, res, X, y, file):
     bar_X = list(X.columns)
-    plt.figure()
+    plt.figure(figsize=(len(bar_X), 8))
     plt.bar(bar_X, res)
     plt.title(f'Data: {file}, Method:{select_type}, Target:{y.name}')
     plt.savefig(f'./results/feature_score/{file}-{select_type}.png')
@@ -13,6 +14,9 @@ def plot_bar(select_type, res, X, y, file):
 
 
 def feat_score(select_type, task_type, y, X, file):
+    folder = f'./results/feature_score'
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     if(select_type == "chi2"):
         res = feature_selection.chi2(X, y)[0]
     elif(select_type == "pearson"):

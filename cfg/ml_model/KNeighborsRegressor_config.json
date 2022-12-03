@@ -1,0 +1,47 @@
+{
+    "neighbors": {
+        "max": 10,
+        "min": 5,
+        "int": true,
+        "class": false
+    },
+    "leaf_size": {
+        "max": 300,
+        "min": 1,
+        "int": true,
+        "class": false
+    },
+    "weights": {
+        "max": 2,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "uniform",
+            "distance"
+        ]
+    },
+    "algorithm": {
+        "max": 4,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "ball_tree",
+            "kd_tree",
+            "brute",
+            "auto"
+        ]
+    },
+    "metric": {
+        "max": 3,
+        "min": 1,
+        "int": false,
+        "class": true,
+        "class_name": [
+            "euclidean",
+            "manhattan",
+            "chebyshev"
+        ]
+    }
+}

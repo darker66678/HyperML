@@ -38,7 +38,7 @@ class PSO(object):
         self.c2 = c2
         self.w = w
         self.count = 0
-
+        self.task_type = task_type
         if scoring == 'specificity':
             self.scoring = specificity
         else:
@@ -77,8 +77,12 @@ class PSO(object):
                            [1], class_particle[0], class_particle[1], class_particle[2]])
         elif(self.model == "ADA"):
             with parallel_backend('threading'):
-                ada = self.ML_model[0](n_estimators=particle_loc[i][0], learning_rate=particle_loc[i][1], algorithm=class_particle[0], base_estimator=self.ML_model[1](
-                    criterion=class_particle[1], max_depth=particle_loc[i][4], min_samples_split=particle_loc[i][5], min_samples_leaf=particle_loc[i][6], max_features=class_particle[2]))
+                if(self.task_type == "classfication"):
+                    ada = self.ML_model[0](n_estimators=particle_loc[i][0], learning_rate=particle_loc[i][1], algorithm=class_particle[0], base_estimator=self.ML_model[1](
+                        criterion=class_particle[1], max_depth=particle_loc[i][4], min_samples_split=particle_loc[i][5], min_samples_leaf=particle_loc[i][6], max_features=class_particle[2]))
+                else:
+                    ada = self.ML_model[0](n_estimators=particle_loc[i][0], learning_rate=particle_loc[i][1], loss=class_particle[0], base_estimator=self.ML_model[1](
+                        criterion=class_particle[1], max_depth=particle_loc[i][4], min_samples_split=particle_loc[i][5], min_samples_leaf=particle_loc[i][6], max_features=class_particle[2]))
                 cv_scores = cross_validate(
                     ada, self.X, self.y, cv=self.k_fold, scoring=self.scoring, n_jobs=-1, return_train_score=True)
                 params.append([particle_loc[i][0], particle_loc[i][1], class_particle[0],
@@ -274,10 +278,9 @@ class PSO(object):
                 particle_loc, particle_dir, gbest_parameter, pbest_parameters)
         results.sort()
         self.plot(results, results_ave, good_fitness)
-
         logging.info(
-            f'Final parameters are: , {logging_best_parameter}')
-        print('Final parameters are :', logging_best_parameter)
+            f'Final parameters are: , {logging_best_parameter}, {self.keys}')
+        print('Final parameters are :', logging_best_parameter, self.keys)
         results = pd.concat(
             [pd.Series(train), pd.Series(test)], axis=1)
         results = pd.concat(

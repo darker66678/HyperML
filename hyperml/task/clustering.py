@@ -12,8 +12,12 @@ def clustering(algo, y, X, file):
     #norm = colors.BoundaryNorm(np.arange(-2.5, 3, 1), cmap.N)
     rightnow = str(datetime.datetime.today()).replace(
         " ", "_").replace(":", "-")[:-7]
+    folder = f'./results/clustering/'
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     folder = f'./results/clustering/{rightnow}_{file}_{algo}'
-    os.makedirs(folder)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     
     print(f'clustering start, algo={algo}')
     with open(f'./cfg/ml_model/{algo}_config.json') as f:
